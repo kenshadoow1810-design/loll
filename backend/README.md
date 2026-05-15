@@ -1,32 +1,63 @@
 # ProStats LoL - Backend
 
-API REST para estatísticas de jogadores profissionais de League of Legends.
+Backend da API de estatísticas de League of Legends profissionais, integrado com a **Cito API**.
 
-## Tecnologias
-- Node.js + Express
-- PostgreSQL
-- Cache em memória
-- Cron jobs para atualizações periódicas
+## Funcionalidades
 
-## Instalação
+- **Sincronização Automática**: Times e jogadores das 5 principais ligas (LCK, LPL, LCS, LEC, CBLOL)
+- **Cron Jobs**: Atualização horária de dados via Cito API
+- **Cache em Memória**: Reduz chamadas ao banco de dados
+- **Endpoints REST**: API completa para consumo do frontend
 
-1. Instale as dependências:
+## Pré-requisitos
+
+- Node.js 18+
+- PostgreSQL 14+
+- Chave de API da Cito (https://citoapi.com/)
+
+## Configuração
+
+### 1. Instalar dependências
+
 ```bash
 npm install
 ```
 
-2. Configure o arquivo `.env`:
-```bash
-cp .env.example .env
-# Edite .env com suas credenciais do PostgreSQL e Riot API
+### 2. Configurar variáveis de ambiente
+
+Edite o arquivo `.env` na raiz do projeto:
+
+```env
+DB_HOST=localhost
+DB_PORT=5432
+DB_NAME=prostats_lol
+DB_USER=postgres
+DB_PASSWORD=postgres
+PORT=3000
+NODE_ENV=development
+CITO_API_KEY=sua_chave_aqui
 ```
 
-3. Inicialize o banco de dados:
+### 3. Criar banco de dados
+
+```sql
+CREATE DATABASE prostats_lol;
+```
+
+### 4. Inicializar schema
+
 ```bash
 npm run db:init
 ```
 
-4. Inicie o servidor:
+### 5. Sincronização inicial
+
+```bash
+npm run sync:init
+```
+
+## Rodando o projeto
+
 ```bash
 # Desenvolvimento
 npm run dev
@@ -35,80 +66,15 @@ npm run dev
 npm start
 ```
 
-## Endpoints
+## Endpoints Principais
 
-### Players
-- `GET /api/players` - Lista todos os jogadores
-- `GET /api/players/:id` - Detalhes de um jogador
-- `GET /api/players/top` - Top jogadores por KDA
-- `GET /api/players?league=CBLOL` - Jogadores de uma liga
-- `GET /api/players?search=faker` - Busca por nome
-
-### Teams
-- `GET /api/teams` - Lista todos os times
-- `GET /api/teams?league=LCK` - Times de uma liga
-
-### Leagues/Rankings
-- `GET /api/leagues/:leagueId/rankings` - Rankings da liga
-
-### Schedule
-- `GET /api/schedule` - Próximas partidas competitivas
-- `GET /api/schedule?league=LEC` - Partidas de uma liga específica
-
-### News
-- `GET /api/news` - Últimas notícias
-
-### Stats
-- `GET /api/stats/champions` - Campeões mais jogados
-- `GET /api/stats/kda/top` - Top KDA dos jogadores
-- `GET /api/stats/compare?player1=1&player2=2` - Comparar dois jogadores
-
-## Estrutura do Projeto
-
-```
-backend/
-├── src/
-│   ├── config/
-│   │   └── database.js       # Configuração do PostgreSQL
-│   ├── controllers/          # Controladores (lógica de negócio)
-│   ├── routes/
-│   │   └── api.js            # Rotas da API
-│   ├── services/
-│   │   └── databaseService.js # Queries e cache
-│   ├── utils/
-│   │   └── initDb.js         # Script de inicialização do DB
-│   └── server.js             # Ponto de entrada
-├── data/
-│   ├── schema.sql            # Schema do banco
-│   ├── seed_teams.sql        # Seed de times
-│   └── seed_players.sql      # Seed de jogadores
-├── .env                      # Variáveis de ambiente
-├── .env.example              # Exemplo de variáveis
-└── package.json
-```
+- `GET /api/players` - Lista de jogadores
+- `GET /api/teams` - Lista de times
+- `GET /api/schedule` - Calendário de partidas
+- `GET /api/stats/compare?player1=id&player2=id` - Comparar jogadores
 
 ## Cron Jobs
 
-| Tarefa | Frequência | Descrição |
-|--------|------------|-----------|
-| Cache cleanup | 10 min | Limpa itens expirados do cache |
-| Rankings update | 1 hora | Atualiza rankings das ligas |
-| News update | 30 min | Atualiza notícias |
-| Matches update | 15 min | Atualiza partidas de jogadores top |
-
-## Cache
-
-O sistema utiliza cache em memória com TTL de 5 minutos para:
-- Listas de jogadores
-- Estatísticas
-- Rankings
-- Calendário de partidas
-- Notícias
-
-## Próximos Passos
-
-- [ ] Integração com Riot API para dados reais
-- [ ] Scraping de notícias de sites de eSports
-- [ ] Seed de partidas históricas
-- [ ] Seed de calendário de partidas futuras
-- [ ] Endpoint de matches históricos por jogador
+- Times/Jogadores: Atualização horária
+- Calendário: A cada 30 minutos
+- Cache Cleanup: A cada 1 minuto
