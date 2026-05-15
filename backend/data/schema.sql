@@ -1,9 +1,12 @@
 -- Schema do Banco de Dados ProStats LoL
+-- Atualizado para integração com Cito API
 
 -- Tabela de Times
 CREATE TABLE IF NOT EXISTS teams (
     id SERIAL PRIMARY KEY,
-    name VARCHAR(100) NOT NULL UNIQUE,
+    external_id VARCHAR(100) UNIQUE,
+    name VARCHAR(100) NOT NULL,
+    code VARCHAR(20),
     logo_url VARCHAR(255),
     region VARCHAR(50) NOT NULL,
     league VARCHAR(50),
@@ -15,14 +18,18 @@ CREATE TABLE IF NOT EXISTS teams (
 -- Tabela de Jogadores
 CREATE TABLE IF NOT EXISTS players (
     id SERIAL PRIMARY KEY,
-    puuid VARCHAR(100) UNIQUE,
+    external_id VARCHAR(100) UNIQUE,
+    puuid VARCHAR(100),
     name VARCHAR(100) NOT NULL,
+    real_name VARCHAR(100),
     team_id INTEGER REFERENCES teams(id) ON DELETE SET NULL,
     role VARCHAR(20),
+    photo_url VARCHAR(255),
+    league VARCHAR(50),
+    region VARCHAR(50),
     rank VARCHAR(50),
     profile_icon_id INTEGER,
     country VARCHAR(50),
-    real_name VARCHAR(100),
     birth_date DATE,
     is_active BOOLEAN DEFAULT true,
     last_update TIMESTAMP DEFAULT CURRENT_TIMESTAMP,

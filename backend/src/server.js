@@ -1,10 +1,11 @@
 import express from 'express';
 import cors from 'cors';
 import dotenv from 'dotenv';
-import cron from 'node-cron';
 import apiRoutes from './routes/api.js';
 import { cacheService } from './services/databaseService.js';
 import pool from './config/database.js';
+import { initializeJobs } from './jobs/scheduler.js';
+import { runFullSync } from './services/syncService.js';
 
 dotenv.config();
 
@@ -72,60 +73,27 @@ app.use((err, req, res, next) => {
   });
 });
 
-// ==================== CRON JOBS ====================
-
-// Limpar cache a cada 10 minutos
-cron.schedule('*/10 * * * *', () => {
-  console.log('🧹 Limpando cache expirado...');
-  // A limpeza automática já ocorre no serviço de cache
-});
-
-// Refresh de rankings a cada hora
-cron.schedule('0 * * * *', async () => {
-  console.log('🔄 Atualizando rankings das ligas...');
-  try {
-    // Aqui entraria a lógica para buscar dados da Riot API
-    // Por enquanto, apenas limpamos o cache
-    cacheService.clear();
-    console.log('✅ Rankings atualizados (cache limpo)');
-  } catch (error) {
-    console.error('❌ Erro ao atualizar rankings:', error);
-  }
-});
-
-// Refresh de notícias a cada 30 minutos
-cron.schedule('*/30 * * * *', async () => {
-  console.log('📰 Atualizando notícias...');
-  try {
-    // Aqui entraria a lógica para buscar notícias de RSS/APIs
-    cacheService.delete('news:latest:20');
-    console.log('✅ Notícias atualizadas');
-  } catch (error) {
-    console.error('❌ Erro ao atualizar notícias:', error);
-  }
-});
-
-// Refresh de partidas de jogadores top a cada 15 minutos
-cron.schedule('*/15 * * * *', async () => {
-  console.log('🎮 Atualizando partidas de jogadores top...');
-  try {
-    // Aqui entraria a lógica para buscar partidas da Riot API
-    cacheService.clear();
-    console.log('✅ Partidas atualizadas');
-  } catch (error) {
-    console.error('❌ Erro ao atualizar partidas:', error);
-  }
-});
-
 // ==================== START SERVER ====================
 
 // Iniciar limpeza do cache
 cacheService.startCleanup(60000);
 
-// Testar conexão com banco de dados
+// Testar conexão com banco de dados e iniciar
 pool.query('SELECT NOW()')
-  .then(() => {
+  .then(async () => {
     console.log('✅ Conexão com banco de dados verificada');
+    
+    // Executar sincronização inicial ao iniciar o servidor
+    console.log('🚀 Executando sincronização inicial de dados...');
+    try {
+      await runFullSync();
+    } catch (error) {
+      console.error('⚠️ Falha na sincronização inicial:', error.message);
+      console.log('Continuando sem dados sincronizados...');
+    }
+    
+    // Inicializar Cron Jobs
+    initializeJobs();
     
     app.listen(PORT, () => {
       console.log(`
@@ -150,10 +118,9 @@ pool.query('SELECT NOW()')
    - GET /api/stats/compare   → Comparar jogadores
 
 🕒 Cron jobs ativos:
-   - Cache cleanup: a cada 10 min
-   - Rankings update: a cada 1 hora
-   - News update: a cada 30 min
-   - Matches update: a cada 15 min
+   - Cache cleanup: a cada 1 min
+   - Times/Jogadores: Atualização horária (Cito API)
+   - Calendário: Atualização a cada 30 min (Cito API)
 `);
     });
   })
