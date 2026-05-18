@@ -95,7 +95,15 @@ export const api = {
       }
     } catch (error) {
       console.error('Erro ao buscar conteúdo da notícia:', error);
-      throw error;
+      // Retorna um fallback em vez de lançar erro
+      return {
+        title: 'Conteúdo não disponível',
+        content: '<p>Desculpe, não foi possível carregar o conteúdo completo desta notícia no momento.</p>',
+        imageUrl: null,
+        publishedAt: null,
+        author: null,
+        source: 'Indisponível'
+      };
     }
   },
 

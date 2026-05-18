@@ -1,5 +1,5 @@
 import express from 'express';
-import { fetchAllNews } from '../services/newsService.js';
+import { fetchAllNews, fetchNewsWithContent } from '../services/newsService.js';
 import { fetchNewsContent } from '../services/newsContentService.js';
 
 const router = express.Router();
@@ -70,6 +70,47 @@ router.get('/content', async (req, res) => {
     res.status(500).json({
       success: false,
       error: 'Erro ao carregar conteúdo da notícia',
+      message: error.message,
+    });
+  }
+});
+
+// GET /api/news/full/:id - Retorna uma notícia específica com conteúdo completo
+router.get('/full/:id', async (req, res) => {
+  try {
+    const { id } = req.params;
+    const { url } = req.query;
+    
+    if (!url) {
+      return res.status(400).json({
+        success: false,
+        error: 'URL não fornecida',
+        message: 'É necessário fornecer a URL da notícia como parâmetro ?url=',
+      });
+    }
+    
+    console.log(`📖 Buscando notícia completa com ID: ${id}`);
+    
+    // Cria um objeto básico da notícia
+    const newsItem = {
+      id,
+      url,
+      title: req.query.title || 'Notícia',
+      summary: req.query.summary || '',
+    };
+    
+    // Busca o conteúdo completo
+    const fullNews = await fetchNewsWithContent(newsItem);
+    
+    res.json({
+      success: true,
+      data: fullNews,
+    });
+  } catch (error) {
+    console.error('❌ Erro ao buscar notícia completa:', error);
+    res.status(500).json({
+      success: false,
+      error: 'Erro ao carregar notícia completa',
       message: error.message,
     });
   }

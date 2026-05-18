@@ -45,6 +45,8 @@ export async function fetchNewsContent(url) {
     $('[class*="comment"], [id*="comment"]').remove();
     $('[class*="sidebar"], [id*="sidebar"]').remove();
     $('[class*="related"], [id*="related"]').remove();
+    // Remove elementos específicos do Google News
+    $('c-wiz, nav, header, footer, .wHbD3b, .NIYv2b, .IBr9hb').remove();
 
     // Tenta encontrar o conteúdo principal do artigo
     let articleContent = null;

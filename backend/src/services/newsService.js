@@ -137,6 +137,8 @@ export async function fetchNewsFromRSS(feedUrl, category) {
         date: timeAgo,
         img: imageUrl,
         author: author,
+        content: null, // Será carregado sob demanda
+        fullContent: null, // Será carregado sob demanda
       };
     });
   } catch (error) {
@@ -185,4 +187,35 @@ export async function fetchAllNews(category = 'all') {
   return uniqueNews.sort((a, b) => 
     new Date(b.publishedAt) - new Date(a.publishedAt)
   );
+}
+
+/**
+ * Função para buscar o conteúdo completo de uma notícia específica
+ * e adicionar ao objeto da notícia
+ */
+export async function fetchNewsWithContent(newsItem) {
+  if (!newsItem || !newsItem.url || newsItem.url === '#') {
+    return newsItem;
+  }
+
+  try {
+    console.log(`📖 Buscando conteúdo completo para: ${newsItem.title}`);
+    
+    // Import dinâmico para evitar circular dependency
+    const { fetchNewsContent } = await import('./newsContentService.js');
+    const contentData = await fetchNewsContent(newsItem.url);
+    
+    return {
+      ...newsItem,
+      fullContent: contentData.data?.content || newsItem.summary,
+      content: contentData.data?.content || newsItem.summary,
+    };
+  } catch (error) {
+    console.error(`⚠️ Erro ao buscar conteúdo: ${error.message}`);
+    return {
+      ...newsItem,
+      fullContent: newsItem.summary,
+      content: newsItem.summary,
+    };
+  }
 }
