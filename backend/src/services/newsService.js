@@ -20,10 +20,16 @@ const parser = new Parser({
 const RSS_FEEDS = {
   // Dot Esports - League of Legends (geral)
   all: 'https://www.dotesports.com/feed/league-of-legends',
-  // CBLOL - Usando Google News como fallback
+  // CBLOL - Google News Brasil
   cblol: 'https://news.google.com/rss/search?q=CBLOL+League+of+Legends&hl=pt-BR&gl=BR&ceid=BR:pt-419',
-  // Internacional - LCK, LEC, LCS via Google News
-  international: 'https://news.google.com/rss/search?q=LCK+LEC+LCS+League+of+Legends&hl=en-US&gl=US&ceid=US:en',
+  // LCK - Coreia
+  lck: 'https://news.google.com/rss/search?q=LCK+League+of+Legends&hl=en-US&gl=US&ceid=US:en',
+  // LPL - China
+  lpl: 'https://news.google.com/rss/search?q=LPL+League+of+Legends&hl=en-US&gl=US&ceid=US:en',
+  // LEC - Europa
+  lec: 'https://news.google.com/rss/search?q=LEC+League+of+Legends&hl=en-US&gl=US&ceid=US:en',
+  // LCS - América do Norte
+  lcs: 'https://news.google.com/rss/search?q=LCS+League+of+Legends&hl=en-US&gl=US&ceid=US:en',
   // Mundial - Google News
   worlds: 'https://news.google.com/rss/search?q=Worlds+League+of+Legends+Championship&hl=en-US&gl=US&ceid=US:en',
 };
@@ -156,14 +162,17 @@ export async function fetchAllNews(category = 'all') {
   // Para "all", busca de múltiplas fontes e combina
   console.log('🔄 Buscando todas as categorias de notícias...');
   
-  const [general, cblol, international] = await Promise.all([
+  const [general, cblol, lck, lpl, lec, lcs] = await Promise.all([
     fetchNewsFromRSS(RSS_FEEDS.all, 'all'),
     fetchNewsFromRSS(RSS_FEEDS.cblol, 'cblol'),
-    fetchNewsFromRSS(RSS_FEEDS.international, 'international')
+    fetchNewsFromRSS(RSS_FEEDS.lck, 'lck'),
+    fetchNewsFromRSS(RSS_FEEDS.lpl, 'lpl'),
+    fetchNewsFromRSS(RSS_FEEDS.lec, 'lec'),
+    fetchNewsFromRSS(RSS_FEEDS.lcs, 'lcs')
   ]);
 
   // Combina todos os resultados
-  const allNews = [...general, ...cblol, ...international];
+  const allNews = [...general, ...cblol, ...lck, ...lpl, ...lec, ...lcs];
 
   // Remove duplicatas baseado na URL
   const uniqueNews = allNews.filter((news, index, self) => 

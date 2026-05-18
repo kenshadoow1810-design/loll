@@ -1,4 +1,17 @@
 export function NewsCard({ news, onOpenNews }) {
+  // Mapeamento de categorias para nomes amigáveis
+  const categoryMap = {
+    cblol: 'CBLOL',
+    lck: 'LCK',
+    lpl: 'LPL',
+    lec: 'LEC',
+    lcs: 'LCS',
+    worlds: 'Mundial',
+    all: 'Geral'
+  };
+
+  const displayCategory = categoryMap[news.league?.toLowerCase()] || news.category || 'Geral';
+
   return (
     <div
       onClick={() => onOpenNews(news)}
@@ -6,7 +19,7 @@ export function NewsCard({ news, onOpenNews }) {
     >
       <div className="h-44 overflow-hidden">
         <img
-          src={news.imageUrl || 'data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 600 340%22><rect fill=%22%231A1C23%22 width=%22600%22 height=%22340%22/><text x=%2250%%22 y=%2250%%22 text-anchor=%22middle%22 fill=%22%23785A28%22 font-size=%2240%22>📰</text></svg>'}
+          src={news.img || news.imageUrl || 'data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 600 340%22><rect fill=%22%231A1C23%22 width=%22600%22 height=%22340%22/><text x=%2250%%22 y=%2250%%22 text-anchor=%22middle%22 fill=%22%23785A28%22 font-size=%2240%22>📰</text></svg>'}
           alt={news.title}
           className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
           onError={(e) => {
@@ -17,16 +30,16 @@ export function NewsCard({ news, onOpenNews }) {
       <div className="p-5">
         <div className="flex items-center gap-2 mb-2">
           <span className="text-[10px] px-2 py-0.5 bg-gold-600/20 text-gold-400 rounded-full font-semibold uppercase">
-            {news.category || 'Geral'}
+            {displayCategory}
           </span>
           <span className="text-[10px] text-gray-500">
-            {new Date(news.publishedAt).toLocaleDateString('pt-BR')}
+            {news.date || new Date(news.publishedAt).toLocaleDateString('pt-BR')}
           </span>
         </div>
         <h3 className="font-bold text-white text-sm leading-snug mb-2 line-clamp-2 group-hover:text-gold-400 transition-colors">
           {news.title}
         </h3>
-        <p className="text-xs text-gray-500 leading-relaxed line-clamp-2">{news.summary}</p>
+        <p className="text-xs text-gray-500 leading-relaxed line-clamp-2">{news.summary || news.description}</p>
       </div>
     </div>
   );
