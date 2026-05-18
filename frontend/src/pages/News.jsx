@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react';
 import { NewsGrid } from '../components/news/NewsCard';
+import { NewsReaderModal } from '../components/news/NewsReaderModal';
 import { api } from '../services/api';
 
 export function News() {
@@ -7,6 +8,7 @@ export function News() {
   const [loading, setLoading] = useState(true);
   const [selectedCategory, setSelectedCategory] = useState('all');
   const [categories, setCategories] = useState([]);
+  const [selectedNews, setSelectedNews] = useState(null);
 
   useEffect(() => {
     const loadCategories = async () => {
@@ -34,6 +36,14 @@ export function News() {
     };
     loadNews();
   }, [selectedCategory]);
+
+  const handleOpenNews = (newsItem) => {
+    setSelectedNews(newsItem);
+  };
+
+  const handleCloseNews = () => {
+    setSelectedNews(null);
+  };
 
   return (
     <div className="pt-24 pb-12 min-h-screen animate-fadeIn">
@@ -68,7 +78,15 @@ export function News() {
             ))}
           </div>
         ) : (
-          <NewsGrid news={news} />
+          <NewsGrid news={news} onOpenNews={handleOpenNews} />
+        )}
+
+        {/* Modal de Leitura da Notícia */}
+        {selectedNews && (
+          <NewsReaderModal 
+            news={selectedNews} 
+            onClose={handleCloseNews} 
+          />
         )}
       </div>
     </div>

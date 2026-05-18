@@ -28,9 +28,30 @@ async function testNewsService() {
       console.log(`   URL: ${cblolNews[0].url}\n`);
     }
     
-    console.log('3️⃣ Testando notícias internacionais...');
-    const intlNews = await fetchAllNews('international');
-    console.log(`✅ Sucesso! ${intlNews.length} notícias internacionais encontradas.\n`);
+    console.log('3️⃣ Testando notícias da LCK...');
+    const lckNews = await fetchAllNews('lck');
+    console.log(`✅ Sucesso! ${lckNews.length} notícias da LCK encontradas.\n`);
+    
+    if (lckNews.length > 0) {
+      console.log('📰 Primeira notícia da LCK:');
+      console.log(`   Título: ${lckNews[0].title}\n`);
+    }
+    
+    console.log('4️⃣ Testando notícias da LEC...');
+    const lecNews = await fetchAllNews('lec');
+    console.log(`✅ Sucesso! ${lecNews.length} notícias da LEC encontradas.\n`);
+    
+    console.log('5️⃣ Testando notícias da LCS...');
+    const lcsNews = await fetchAllNews('lcs');
+    console.log(`✅ Sucesso! ${lcsNews.length} notícias da LCS encontradas.\n`);
+    
+    console.log('6️⃣ Testando notícias da LPL...');
+    const lplNews = await fetchAllNews('lpl');
+    console.log(`✅ Sucesso! ${lplNews.length} notícias da LPL encontradas.\n`);
+    
+    console.log('7️⃣ Testando notícias do Mundial...');
+    const worldsNews = await fetchAllNews('worlds');
+    console.log(`✅ Sucesso! ${worldsNews.length} notícias do Mundial encontradas.\n`);
     
     console.log('🎉 Todos os testes passaram!\n');
   } catch (error) {

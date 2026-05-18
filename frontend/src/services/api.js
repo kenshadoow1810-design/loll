@@ -68,8 +68,34 @@ export const api = {
       return [
         { id: 'all', name: 'Todas' },
         { id: 'cblol', name: 'CBLOL' },
-        { id: 'international', name: 'Internacional' },
+        { id: 'lck', name: 'LCK' },
+        { id: 'lpl', name: 'LPL' },
+        { id: 'lec', name: 'LEC' },
+        { id: 'lcs', name: 'LCS' },
       ];
+    }
+  },
+
+  // Get news content for internal display
+  getNewsContent: async (url) => {
+    try {
+      const encodedUrl = encodeURIComponent(url);
+      const response = await fetch(`${API_BASE_URL}/news/content?url=${encodedUrl}`);
+      
+      if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`);
+      }
+      
+      const data = await response.json();
+      
+      if (data.success) {
+        return data.data;
+      } else {
+        throw new Error(data.message || 'Erro ao buscar conteúdo da notícia');
+      }
+    } catch (error) {
+      console.error('Erro ao buscar conteúdo da notícia:', error);
+      throw error;
     }
   },
 

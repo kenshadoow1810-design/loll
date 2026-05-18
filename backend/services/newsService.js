@@ -14,10 +14,16 @@ const parser = new Parser({
 const RSS_FEEDS = {
   // Google News - League of Legends (geral)
   all: 'https://news.google.com/rss/search?q=League+of+Legends&hl=pt-BR&gl=BR&ceid=BR:pt-419',
-  // Google News - CBLOL
+  // Google News - CBLOL (Brasil)
   cblol: 'https://news.google.com/rss/search?q=CBLOL&hl=pt-BR&gl=BR&ceid=BR:pt-419',
-  // Google News - LoL Esports internacional
-  international: 'https://news.google.com/rss/search?q=LoL+Esports+LCK+LEC+LCS&hl=en-US&gl=US&ceid=US:en',
+  // Google News - LCK (Coreia)
+  lck: 'https://news.google.com/rss/search?q=LCK+League+of+Legends&hl=en-US&gl=US&ceid=US:en',
+  // Google News - LPL (China)
+  lpl: 'https://news.google.com/rss/search?q=LPL+League+of+Legends&hl=en-US&gl=US&ceid=US:en',
+  // Google News - LEC (Europa)
+  lec: 'https://news.google.com/rss/search?q=LEC+League+of+Legends&hl=en-US&gl=US&ceid=US:en',
+  // Google News - LCS (América do Norte)
+  lcs: 'https://news.google.com/rss/search?q=LCS+League+of+Legends&hl=en-US&gl=US&ceid=US:en',
   // Google News - Mundial de LoL
   worlds: 'https://news.google.com/rss/search?q=Worlds+League+of+Legends+Championship&hl=en-US&gl=US&ceid=US:en'
 };
@@ -115,14 +121,17 @@ export async function fetchAllNews(category = 'all') {
   // Para "all", busca de múltiplas fontes e combina
   console.log('🔄 Buscando todas as categorias de notícias...');
   
-  const [general, cblol, international] = await Promise.all([
+  const [general, cblol, lck, lpl, lec, lcs] = await Promise.all([
     fetchNewsFromRSS(RSS_FEEDS.all, 'all'),
     fetchNewsFromRSS(RSS_FEEDS.cblol, 'cblol'),
-    fetchNewsFromRSS(RSS_FEEDS.international, 'international')
+    fetchNewsFromRSS(RSS_FEEDS.lck, 'lck'),
+    fetchNewsFromRSS(RSS_FEEDS.lpl, 'lpl'),
+    fetchNewsFromRSS(RSS_FEEDS.lec, 'lec'),
+    fetchNewsFromRSS(RSS_FEEDS.lcs, 'lcs')
   ]);
 
   // Combina todos os resultados
-  const allNews = [...general, ...cblol, ...international];
+  const allNews = [...general, ...cblol, ...lck, ...lpl, ...lec, ...lcs];
 
   // Remove duplicatas baseado na URL
   const uniqueNews = allNews.filter((news, index, self) => 
