@@ -25,8 +25,22 @@ export function NewsReaderModal({ news, onClose }) {
       try {
         setLoading(true);
         const data = await api.getNewsContent(news.url);
-        setContent(data);
-        setError(null);
+        
+        if (data) {
+          setContent(data);
+          setError(null);
+        } else {
+          // Fallback: usa conteúdo disponível no objeto news quando a API retorna null
+          setContent({
+            title: news?.title || 'Notícia',
+            content: news?.fullContent || news?.summary || news?.description || 'Carregando conteúdo...',
+            imageUrl: news?.img || news?.imageUrl,
+            publishedAt: news?.date || news?.publishedAt,
+            author: news?.author,
+            source: news?.source || 'Desconhecido'
+          });
+          setError(null);
+        }
       } catch (err) {
         console.error('Erro ao carregar conteúdo:', err);
         // Fallback: usa conteúdo disponível no objeto news

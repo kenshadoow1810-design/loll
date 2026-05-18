@@ -125,11 +125,28 @@ export async function fetchNewsFromRSS(feedUrl, category) {
         league = 'WORLD';
       }
 
+      // Para feeds do Google News, tentar extrair o link original da descrição
+      let originalUrl = item.link || '#';
+      if (originalUrl && originalUrl.startsWith('http://news.google.com')) {
+        // O Google News coloca o link original dentro da descrição em alguns casos
+        // ou podemos tentar extrair do próprio link se tiver parâmetro url
+        try {
+          const urlObj = new URL(originalUrl);
+          const urlParam = urlObj.searchParams.get('url');
+          if (urlParam) {
+            originalUrl = urlParam;
+          }
+        } catch (e) {
+          // Mantém o link original se falhar
+        }
+      }
+
       return {
         id: `${category}-${index}-${Date.now()}`,
         title: item.title || 'Sem título',
         summary: summary || 'Sem descrição disponível',
-        url: item.link || '#',
+        url: originalUrl,
+        originalLink: item.link || '#', // Mantém o link original do Google News para referência
         source: category === 'cblol' || category === 'international' || category === 'worlds' ? 'Inven Global' : 'Dot Esports',
         category: newsCategory,
         league,
@@ -212,6 +229,24 @@ export async function fetchNewsWithContent(newsItem) {
     };
   } catch (error) {
     console.error(`⚠️ Erro ao buscar conteúdo: ${error.message}`);
+    
+    // Se falhar e tiver um originalLink, tentar com ele
+    if (newsItem.originalLink && newsItem.originalLink !== newsItem.url) {
+      try {
+        console.log(`🔄 Tentando com link original: ${newsItem.originalLink}`);
+        const { fetchNewsContent } = await import('./newsContentService.js');
+        const contentData = await fetchNewsContent(newsItem.originalLink);
+        
+        return {
+          ...newsItem,
+          fullContent: contentData.data?.content || newsItem.summary,
+          content: contentData.data?.content || newsItem.summary,
+        };
+      } catch (retryError) {
+        console.error(`⚠️ Erro ao buscar conteúdo com link original: ${retryError.message}`);
+      }
+    }
+    
     return {
       ...newsItem,
       fullContent: newsItem.summary,

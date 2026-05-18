@@ -6,15 +6,61 @@ import * as cheerio from 'cheerio';
  * Isso permite exibir a notícia dentro da aplicação sem redirecionar para sites externos
  */
 export async function fetchNewsContent(url) {
-  if (!url || url === '#' || url.startsWith('http://news.google.com')) {
+  if (!url || url === '#') {
     throw new Error('URL inválida para proxy de notícias');
   }
 
+  // Se for URL do Google News, tenta extrair a URL original
+  let targetUrl = url;
+  if (url.includes('news.google.com')) {
+    try {
+      const urlObj = new URL(url);
+      // O Google News armazena a URL original codificada em base64 no path
+      const pathParts = urlObj.pathname.split('/');
+      const encodedPart = pathParts.find(part => part.startsWith('CBM') || part.startsWith('CBE'));
+      
+      if (encodedPart) {
+        // Decodifica o base64 da URL
+        const decoded = Buffer.from(encodedPart, 'base64').toString('utf-8');
+        // A URL decodificada pode estar em formato JSON ou direto
+        try {
+          const parsed = JSON.parse(decoded);
+          if (parsed.url) {
+            targetUrl = parsed.url;
+            console.log(`🔄 URL original extraída do Google News: ${targetUrl}`);
+          }
+        } catch (e) {
+          // Se não for JSON, tenta usar diretamente
+          if (decoded.startsWith('http')) {
+            targetUrl = decoded;
+            console.log(`🔄 URL original extraída do Google News: ${targetUrl}`);
+          }
+        }
+      }
+      
+      // Tenta também pegar do parâmetro url se existir
+      if (targetUrl === url) {
+        const urlParam = urlObj.searchParams.get('url');
+        if (urlParam) {
+          targetUrl = urlParam;
+          console.log(`🔄 URL original extraída do parâmetro: ${targetUrl}`);
+        }
+      }
+    } catch (extractError) {
+      console.error('Não foi possível extrair URL original:', extractError.message);
+    }
+  }
+
+  // Se ainda for URL do Google News após tentativa de extração, retorna erro
+  if (targetUrl.includes('news.google.com')) {
+    throw new Error('Não foi possível extrair a URL original da notícia do Google News');
+  }
+
   try {
-    console.log(`🌐 Buscando conteúdo da notícia: ${url}`);
+    console.log(`🌐 Buscando conteúdo da notícia: ${targetUrl}`);
 
     // Faz a requisição com headers de navegador real
-    const response = await axios.get(url, {
+    const response = await axios.get(targetUrl, {
       headers: {
         'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
         'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,*/*;q=0.8',
@@ -45,8 +91,6 @@ export async function fetchNewsContent(url) {
     $('[class*="comment"], [id*="comment"]').remove();
     $('[class*="sidebar"], [id*="sidebar"]').remove();
     $('[class*="related"], [id*="related"]').remove();
-    // Remove elementos específicos do Google News
-    $('c-wiz, nav, header, footer, .wHbD3b, .NIYv2b, .IBr9hb').remove();
 
     // Tenta encontrar o conteúdo principal do artigo
     let articleContent = null;
@@ -114,13 +158,13 @@ export async function fetchNewsContent(url) {
     return {
       success: true,
       data: {
-        url,
+        url: targetUrl,
         title,
         content: articleContent || '<p>Conteúdo não disponível</p>',
         imageUrl,
         publishedAt,
         author,
-        source: new URL(url).hostname,
+        source: new URL(targetUrl).hostname,
       },
     };
   } catch (error) {
