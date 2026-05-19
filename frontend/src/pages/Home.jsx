@@ -26,15 +26,11 @@ export function Home() {
               <div className="text-xs text-gray-500 uppercase tracking-widest mt-1">Jogadores</div>
             </div>
             <div className="text-center">
-              <div className="font-display font-bold text-3xl text-accent-blue">84,320</div>
-              <div className="text-xs text-gray-500 uppercase tracking-widest mt-1">Partidas</div>
-            </div>
-            <div className="text-center">
-              <div className="font-display font-bold text-3xl text-accent-purple">5</div>
+              <div className="font-display font-bold text-3xl text-accent-blue">5</div>
               <div className="text-xs text-gray-500 uppercase tracking-widest mt-1">Ligas</div>
             </div>
             <div className="text-center">
-              <div className="font-display font-bold text-3xl text-accent-red">24/7</div>
+              <div className="font-display font-bold text-3xl text-accent-purple">24/7</div>
               <div className="text-xs text-gray-500 uppercase tracking-widest mt-1">Atualização</div>
             </div>
           </div>
