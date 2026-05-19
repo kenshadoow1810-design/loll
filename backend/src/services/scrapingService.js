@@ -34,48 +34,63 @@ if (!fs.existsSync(DOWNLOAD_DIR)) {
 
 async function downloadCSV(page, url, filename) {
   await page.goto(url, { waitUntil: 'networkidle2', timeout: 60000 });
-  
-  await page.waitForSelector('button', { timeout: 10000 });
-  
-  const buttons = await page.$$('button');
-  let downloadButton = null;
-  
-  for (const button of buttons) {
-    const text = await page.evaluate(el => el.textContent.trim(), button);
-    if (text.includes('Download') || text.includes('Export')) {
-      downloadButton = button;
-      break;
+
+  // Configurar comportamento de download
+  const client = await page.target().createCDPSession();
+  await client.send('Page.setDownloadBehavior', {
+    behavior: 'allow',
+    downloadPath: DOWNLOAD_DIR,
+  });
+
+  // Aguardar e clicar no link "Download This Table" pelo texto exato
+  console.log(`Procurando botão "Download This Table" em ${url}...`);
+
+  try {
+    await page.waitForFunction(() => {
+      const links = Array.from(document.querySelectorAll('a'));
+      return links.find(link => link.textContent.trim() === 'Download This Table');
+    }, { timeout: 15000 });
+
+    // Clicar no elemento encontrado
+    await page.evaluate(() => {
+      const links = Array.from(document.querySelectorAll('a'));
+      const target = links.find(link => link.textContent.trim() === 'Download This Table');
+      if (target) target.click();
+    });
+
+    console.log(`✅ Clique acionado em "Download This Table" para ${url}`);
+
+    // Aguardar o download ser completado
+    await new Promise(resolve => setTimeout(resolve, 3000));
+
+    // Procurar o arquivo baixado mais recente
+    const files = fs.readdirSync(DOWNLOAD_DIR)
+      .filter(f => f.endsWith('.csv'))
+      .map(f => ({ name: f, time: fs.statSync(path.join(DOWNLOAD_DIR, f)).mtime }));
+
+    if (files.length > 0) {
+      files.sort((a, b) => b.time - a.time);
+      const latestFile = files[0].name;
+      const newPath = path.join(DOWNLOAD_DIR, filename);
+
+      // Renomear se necessário para manter o padrão
+      if (latestFile !== filename) {
+        fs.renameSync(path.join(DOWNLOAD_DIR, latestFile), newPath);
+      }
+
+      return newPath;
     }
-  }
 
-  if (!downloadButton) {
-    console.log(`Botão de download não encontrado em ${url}, tentando alternativa...`);
-    const allButtons = await page.$$eval('button', btns => btns.map(b => b.textContent.trim()));
-    console.log('Botões encontrados:', allButtons);
     return null;
+  } catch (error) {
+    console.error(`❌ Erro ao encontrar/clicar no botão de download em ${url}:`, error.message);
+
+    // Listar todos os links disponíveis para debug
+    const allLinks = await page.$$eval('a', links => links.map(l => l.textContent.trim()));
+    console.log('Links encontrados na página:', allLinks.filter(l => l.length > 0));
+
+    throw error;
   }
-
-  const downloadPath = path.join(DOWNLOAD_DIR, filename);
-  
-  await Promise.all([
-    new Promise((resolve) => {
-      const client = page._client;
-      client.on('Page.downloadProgress', (event) => {
-        if (event.state === 'completed') {
-          resolve();
-        }
-      });
-      client.send('Page.setDownloadBehavior', {
-        behavior: 'allow',
-        downloadPath: DOWNLOAD_DIR,
-      });
-    }),
-    downloadButton.click()
-  ]);
-
-  await new Promise(resolve => setTimeout(resolve, 2000));
-  
-  return downloadPath;
 }
 
 function parseCSV(filePath) {
@@ -98,21 +113,21 @@ async function scrapePlayers() {
 
   try {
     const page = await browser.newPage();
-    
+
     await page.setViewport({ width: 1920, height: 1080 });
 
     const allPlayers = [];
 
     for (const league of LEAGUES) {
       console.log(`Processando liga: ${league.name}`);
-      
+
       if (league.urls) {
         let leaguePlayers = [];
         for (let i = 0; i < league.urls.length; i++) {
           const url = league.urls[i];
           const filename = `players_${league.name.toLowerCase()}_${i}.csv`;
           console.log(`  Baixando URL ${i + 1}/${league.urls.length}: ${url}`);
-          
+
           const filePath = await downloadCSV(page, url, filename);
           if (filePath && fs.existsSync(filePath)) {
             const players = await parseCSV(filePath);
@@ -121,14 +136,14 @@ async function scrapePlayers() {
             console.log(`    ${players.length} jogadores extraídos`);
           }
         }
-        
+
         const uniquePlayers = Array.from(new Map(leaguePlayers.map(p => [p.Player || p.player, p])).values());
         console.log(`  Total único para ${league.name}: ${uniquePlayers.length} jogadores`);
         allPlayers.push(...uniquePlayers);
       } else {
         const filename = `players_${league.name.toLowerCase()}.csv`;
         console.log(`  Baixando: ${league.url}`);
-        
+
         const filePath = await downloadCSV(page, league.url, filename);
         if (filePath && fs.existsSync(filePath)) {
           const players = await parseCSV(filePath);
@@ -164,14 +179,14 @@ async function scrapeTeams() {
 
     for (const league of TEAMS_LEAGUES) {
       console.log(`Processando liga: ${league.name}`);
-      
+
       if (league.urls) {
         let leagueTeams = [];
         for (let i = 0; i < league.urls.length; i++) {
           const url = league.urls[i];
           const filename = `teams_${league.name.toLowerCase()}_${i}.csv`;
           console.log(`  Baixando URL ${i + 1}/${league.urls.length}: ${url}`);
-          
+
           const filePath = await downloadCSV(page, url, filename);
           if (filePath && fs.existsSync(filePath)) {
             const teams = await parseCSV(filePath);
@@ -180,14 +195,14 @@ async function scrapeTeams() {
             console.log(`    ${teams.length} times extraídos`);
           }
         }
-        
+
         const uniqueTeams = Array.from(new Map(leagueTeams.map(t => [t.Team || t.team, t])).values());
         console.log(`  Total único para ${league.name}: ${uniqueTeams.length} times`);
         allTeams.push(...uniqueTeams);
       } else {
         const filename = `teams_${league.name.toLowerCase()}.csv`;
         console.log(`  Baixando: ${league.url}`);
-        
+
         const filePath = await downloadCSV(page, league.url, filename);
         if (filePath && fs.existsSync(filePath)) {
           const teams = await parseCSV(filePath);
