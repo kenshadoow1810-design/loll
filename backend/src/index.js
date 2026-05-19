@@ -2,10 +2,10 @@ const express = require('express');
 const cors = require('cors');
 require('dotenv').config();
 
-const { createTables } = require('./src/config/schema');
-const { startScheduler } = require('./src/scripts/scheduler');
-const statsRoutes = require('./src/routes/statsRoutes');
-const { runExtraction } = require('./src/services/dataPipeline');
+const { createTables } = require('./config/schema');
+const { startScheduler } = require('./scripts/scheduler');
+const statsRoutes = require('./routes/statsRoutes');
+const { runExtraction } = require('./services/dataPipeline');
 
 const app = express();
 const PORT = process.env.PORT || 3001;
