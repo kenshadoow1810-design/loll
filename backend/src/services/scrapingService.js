@@ -196,9 +196,22 @@ async function scrapeTeams() {
           }
         }
 
-        const uniqueTeams = Array.from(new Map(leagueTeams.map(t => [t.Team || t.team, t])).values());
-        console.log(`  Total único para ${league.name}: ${uniqueTeams.length} times`);
-        allTeams.push(...uniqueTeams);
+        // Consolidar dados de times com mesmo nome (somar estatísticas)
+        const teamMap = new Map();
+        for (const team of leagueTeams) {
+          const teamName = team.Team || team.team;
+          if (teamMap.has(teamName)) {
+            const existingTeam = teamMap.get(teamName);
+            existingTeam.games_played = (parseInt(existingTeam.games_played) || 0) + (parseInt(team.games_played) || 0);
+            existingTeam.wins = (parseInt(existingTeam.wins) || 0) + (parseInt(team.wins) || 0);
+            existingTeam.losses = (parseInt(existingTeam.losses) || 0) + (parseInt(team.losses) || 0);
+          } else {
+            teamMap.set(teamName, { ...team });
+          }
+        }
+        const consolidatedTeams = Array.from(teamMap.values());
+        console.log(`  Total consolidado para ${league.name}: ${consolidatedTeams.length} times`);
+        allTeams.push(...consolidatedTeams);
       } else {
         const filename = `teams_${league.name.toLowerCase()}.csv`;
         console.log(`  Baixando: ${league.url}`);
