@@ -22,6 +22,7 @@ const createTables = async () => {
       position VARCHAR(10),
       league VARCHAR(50) NOT NULL,
       games_played INTEGER DEFAULT 0,
+      wins INTEGER DEFAULT 0,
       kda DECIMAL(5, 2),
       kill_participation DECIMAL(5, 2),
       gold_per_10 DECIMAL(8, 2),
@@ -32,12 +33,31 @@ const createTables = async () => {
     );
   `;
 
+  const createChampionStatsTable = `
+    CREATE TABLE IF NOT EXISTS champion_stats (
+      id SERIAL PRIMARY KEY,
+      champion_name VARCHAR(100) NOT NULL,
+      role VARCHAR(20) NOT NULL,
+      games_played INTEGER DEFAULT 0,
+      wins INTEGER DEFAULT 0,
+      bans INTEGER DEFAULT 0,
+      total_kills INTEGER DEFAULT 0,
+      total_deaths INTEGER DEFAULT 0,
+      total_assists INTEGER DEFAULT 0,
+      updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+      UNIQUE(champion_name, role)
+    );
+  `;
+
   try {
     await pool.query(createTeamsTable);
     console.log('Teams table created successfully');
     
     await pool.query(createPlayersTable);
     console.log('Players table created successfully');
+    
+    await pool.query(createChampionStatsTable);
+    console.log('Champion stats table created successfully');
   } catch (error) {
     console.error('Error creating tables:', error);
     throw error;

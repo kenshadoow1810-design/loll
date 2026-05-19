@@ -1,24 +1,47 @@
+import { useState, useEffect } from 'react';
 import { Bar, Line } from 'react-chartjs-2';
 import { Chart as ChartJS, CategoryScale, LinearScale, BarElement, RadialLinearScale, PointElement, LineElement, ArcElement, Title, Tooltip, Legend, Filler } from 'chart.js';
-import { getTopPlayers, getAllPlayers } from '../../data/mockData';
+import { api } from '../../services/api';
 
 ChartJS.register(CategoryScale, LinearScale, BarElement, RadialLinearScale, PointElement, LineElement, ArcElement, Title, Tooltip, Legend, Filler);
 
 export function TopChampionsChart() {
-  const allPlayers = getAllPlayers();
+  const [championStats, setChampionStats] = useState([]);
+  const [loading, setLoading] = useState(true);
   
-  // Count champion games
+  useEffect(() => {
+    const loadChampionStats = async () => {
+      try {
+        // LINK_DO_CAMPION_AQUI - Dados serão populados quando os links dos campeões forem fornecidos
+        const data = await api.getChampionStats();
+        setChampionStats(data);
+      } catch (error) {
+        console.error('Error loading champion stats:', error);
+      } finally {
+        setLoading(false);
+      }
+    };
+    loadChampionStats();
+  }, []);
+
+  if (loading || championStats.length === 0) {
+    return (
+      <div className="bg-dark-100 border border-gray-700/30 rounded-2xl p-6 h-80 flex items-center justify-center">
+        <div className="text-gray-500 text-sm">
+          {loading ? 'Carregando estatísticas...' : 'Dados de campeões serão disponíveis em breve. Aguardando links para scraping.'}
+        </div>
+      </div>
+    );
+  }
+  
+  // Count champion games by role
   const champStats = {};
-  allPlayers.forEach(player => {
-    if (player.mostPlayedChamps) {
-      player.mostPlayedChamps.forEach(champ => {
-        if (!champStats[champ.champion]) {
-          champStats[champ.champion] = { games: 0, wins: 0 };
-        }
-        champStats[champ.champion].games += champ.games;
-        champStats[champ.champion].wins += champ.wins;
-      });
+  championStats.forEach(champ => {
+    if (!champStats[champ.championName]) {
+      champStats[champ.championName] = { games: 0, wins: 0 };
     }
+    champStats[champ.championName].games += champ.gamesPlayed;
+    champStats[champ.championName].wins += champ.wins;
   });
 
   // Sort by games and take top 10
@@ -82,7 +105,30 @@ export function TopChampionsChart() {
 }
 
 export function TopKDAChart() {
-  const topPlayers = getTopPlayers(5);
+  const [topPlayers, setTopPlayers] = useState([]);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    const loadTopPlayers = async () => {
+      try {
+        const data = await api.getTopPlayers(5);
+        setTopPlayers(data);
+      } catch (error) {
+        console.error('Error loading top players:', error);
+      } finally {
+        setLoading(false);
+      }
+    };
+    loadTopPlayers();
+  }, []);
+
+  if (loading || topPlayers.length === 0) {
+    return (
+      <div className="bg-dark-100 border border-gray-700/30 rounded-2xl p-6 h-80 flex items-center justify-center">
+        <div className="text-gray-500 text-sm">Carregando KDA...</div>
+      </div>
+    );
+  }
 
   const data = {
     labels: topPlayers.map(p => p.name),

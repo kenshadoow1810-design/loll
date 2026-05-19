@@ -1,26 +1,18 @@
-import { useState, useEffect, useRef } from 'react';
+import { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import Chart from 'chart.js/auto';
 import { api } from '../services/api';
 
 export function PlayerDetail() {
   const { playerId, league } = useParams();
   const navigate = useNavigate();
   const [player, setPlayer] = useState(null);
-  const [matches, setMatches] = useState([]);
   const [loading, setLoading] = useState(true);
-  const kdaChartRef = useRef(null);
-  const damageChartRef = useRef(null);
-  const chartInstances = useRef({});
 
   useEffect(() => {
     const loadPlayerData = async () => {
       setLoading(true);
       try {
-        const [playerData, matchesData] = await Promise.all([
-          api.getPlayer(playerId, league),
-          api.getPlayerMatches(playerId, league),
-        ]);
+        const playerData = await api.getPlayer(playerId, league);
         
         if (!playerData) {
           navigate('/players');
@@ -28,7 +20,6 @@ export function PlayerDetail() {
         }
         
         setPlayer(playerData);
-        setMatches(matchesData);
       } catch (error) {
         console.error('Error loading player:', error);
         navigate('/players');
@@ -39,69 +30,6 @@ export function PlayerDetail() {
 
     loadPlayerData();
   }, [playerId, league, navigate]);
-
-  useEffect(() => {
-    if (!player || !kdaChartRef.current || !damageChartRef.current) return;
-
-    Chart.defaults.color = '#9CA3AF';
-    Chart.defaults.borderColor = 'rgba(120,90,40,0.15)';
-    Chart.defaults.font.family = 'Inter';
-
-    const matchLabels = matches.map((_, i) => `#${i + 1}`);
-    const kdaData = matches.map(m => ((m.kills + m.assists) / Math.max(m.deaths, 1)).toFixed(2));
-    const dmgData = matches.map(m => m.damage);
-
-    // KDA Chart
-    chartInstances.current.kda = new Chart(kdaChartRef.current, {
-      type: 'line',
-      data: {
-        labels: matchLabels,
-        datasets: [{
-          label: 'KDA',
-          data: kdaData,
-          borderColor: '#F0C040',
-          backgroundColor: 'rgba(240,192,64,0.1)',
-          fill: true,
-          tension: 0.4,
-          pointBackgroundColor: '#F0C040',
-          pointBorderColor: '#0A0B0E',
-          pointBorderWidth: 2,
-        }]
-      },
-      options: {
-        responsive: true,
-        plugins: { legend: { display: false } },
-        scales: { y: { beginAtZero: true, grid: { color: 'rgba(255,255,255,0.05)' } }, x: { grid: { display: false } } }
-      }
-    });
-
-    // Damage Chart
-    chartInstances.current.damage = new Chart(damageChartRef.current, {
-      type: 'bar',
-      data: {
-        labels: matchLabels,
-        datasets: [{
-          label: 'Dano',
-          data: dmgData,
-          backgroundColor: 'rgba(10,200,185,0.4)',
-          borderColor: '#0AC8B9',
-          borderWidth: 1,
-          borderRadius: 4,
-        }]
-      },
-      options: {
-        responsive: true,
-        plugins: { legend: { display: false } },
-        scales: { y: { beginAtZero: true, grid: { color: 'rgba(255,255,255,0.05)' } }, x: { grid: { display: false } } }
-      }
-    });
-
-    return () => {
-      Object.values(chartInstances.current).forEach(chart => {
-        if (chart) chart.destroy();
-      });
-    };
-  }, [player, matches]);
 
   if (loading) {
     return (
@@ -167,52 +95,11 @@ export function PlayerDetail() {
             </div>
           </div>
 
-          {/* Charts */}
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6 px-6 pb-6">
-            <div className="bg-dark-200 rounded-xl p-4">
-              <h3 className="text-sm font-semibold text-gray-400 mb-3">KDA por Partida</h3>
-              <canvas ref={kdaChartRef} height="200"></canvas>
-            </div>
-            <div className="bg-dark-200 rounded-xl p-4">
-              <h3 className="text-sm font-semibold text-gray-400 mb-3">Dano por Partida</h3>
-              <canvas ref={damageChartRef} height="200"></canvas>
-            </div>
-          </div>
-
-          {/* Recent Matches */}
+          {/* Message about champions data */}
           <div className="px-6 pb-6">
-            <h3 className="text-sm font-semibold text-gray-400 mb-3">Últimas Partidas</h3>
-            <div className="space-y-2">
-              {matches.map(match => {
-                const kdaStr = `${match.kills}/${match.deaths}/${match.assists}`;
-                const kdaVal = ((match.kills + match.assists) / Math.max(match.deaths, 1)).toFixed(2);
-                return (
-                  <div
-                    key={match.id}
-                    className={`flex items-center justify-between p-3 rounded-lg ${
-                      match.win ? 'bg-green-500/5 border border-green-500/10' : 'bg-red-500/5 border border-red-500/10'
-                    }`}
-                  >
-                    <div className="flex items-center gap-3">
-                      <div className="w-8 h-8 rounded-lg ${match.win ? 'bg-green-500/20' : 'bg-red-500/20'} flex items-center justify-center text-xs">
-                        {match.win ? '🏆' : '❌'}
-                      </div>
-                      <div>
-                        <div className="text-sm font-medium text-white">{match.champion}</div>
-                        <div className="text-xs text-gray-500">{match.duration}min</div>
-                      </div>
-                    </div>
-                    <div className="text-right">
-                      <div className={`text-sm font-mono ${match.win ? 'text-green-400' : 'text-red-400'}`}>{kdaStr}</div>
-                      <div className="text-xs text-gray-500">KDA: {kdaVal}</div>
-                    </div>
-                    <div className="hidden sm:block text-right text-xs text-gray-500">
-                      <div>{match.cs} CS</div>
-                      <div>{(match.damage / 1000).toFixed(1)}k dmg</div>
-                    </div>
-                  </div>
-                );
-              })}
+            <div className="bg-dark-200 rounded-xl p-6 text-center">
+              <p className="text-gray-400">Dados de campeões serão disponíveis em breve.</p>
+              <p className="text-sm text-gray-500 mt-2">Esta funcionalidade será implementada quando a pipeline de scraping for atualizada com os links das estatísticas de campeões.</p>
             </div>
           </div>
         </div>

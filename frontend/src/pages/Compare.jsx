@@ -1,14 +1,29 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Radar } from 'react-chartjs-2';
 import { Chart as ChartJS, RadialLinearScale, PointElement, LineElement, ArcElement, Title, Tooltip, Legend, Filler } from 'chart.js';
-import { getAllPlayers, TEAMS } from '../data/mockData';
+import { api } from '../services/api';
 
 ChartJS.register(RadialLinearScale, PointElement, LineElement, ArcElement, Title, Tooltip, Legend, Filler);
 
 export function Compare() {
-  const allPlayers = getAllPlayers();
+  const [allPlayers, setAllPlayers] = useState([]);
+  const [loading, setLoading] = useState(true);
   const [player1Id, setPlayer1Id] = useState('');
   const [player2Id, setPlayer2Id] = useState('');
+
+  useEffect(() => {
+    const loadPlayers = async () => {
+      try {
+        const data = await api.getAllPlayers();
+        setAllPlayers(data);
+      } catch (error) {
+        console.error('Error loading players:', error);
+      } finally {
+        setLoading(false);
+      }
+    };
+    loadPlayers();
+  }, []);
 
   const player1 = allPlayers.find(p => p.id === player1Id);
   const player2 = allPlayers.find(p => p.id === player2Id);
@@ -72,6 +87,16 @@ export function Compare() {
       },
     },
   };
+
+  if (loading) {
+    return (
+      <div className="pt-24 pb-12 min-h-screen animate-fadeIn">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="animate-shimmer h-96 bg-gradient-to-r from-dark-100 via-dark-200 to-dark-100 rounded-2xl" />
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="pt-24 pb-12 min-h-screen animate-fadeIn">
