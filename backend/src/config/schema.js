@@ -9,6 +9,7 @@ const createTables = async () => {
       games_played INTEGER DEFAULT 0,
       wins INTEGER DEFAULT 0,
       losses INTEGER DEFAULT 0,
+      logo_url VARCHAR(500),
       updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
       UNIQUE(name, league)
     );
@@ -28,6 +29,8 @@ const createTables = async () => {
       gold_per_10 DECIMAL(8, 2),
       dpm DECIMAL(8, 2),
       cspm DECIMAL(8, 2),
+      real_name VARCHAR(255),
+      image_url VARCHAR(500),
       updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
       UNIQUE(name, league)
     );

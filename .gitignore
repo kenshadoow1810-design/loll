@@ -2,11 +2,6 @@
 # Dependencies
 node_modules/
 
-# Build artifacts
-dist/
-build/
-target/
-
 # Environment variables
 .env
 .env.local
@@ -15,14 +10,17 @@ target/
 # Logs
 *.log
 
-# IDE files
-.vscode/
-.idea/
-*.swp
-*.swo
-*.tmp
+# Coverage reports
+coverage/
+htmlcov/
+.coverage
 
-# Python
+# Build outputs
+dist/
+build/
+target/
+
+# Python specific
 __pycache__/
 *.pyc
 *.pyo
@@ -31,64 +29,35 @@ __pycache__/
 env/
 venv/
 .venv/
+.venv.bak/
 pip-log.txt
-pip-delete-this-directory.txt
-.tox/
-.coverage
-.coverage.*
-.cache
-nosetests.xml
-coverage.xml
-*.cover
-*.log
-.git/modules/
-.DS_Store
-*.swp
-*~
+pip-selfcheck.json
 .pytest_cache/
-.hypothesis/
+.mypy_cache/
 
-# Node.js
+# Node.js specific
 npm-debug.log*
 yarn-debug.log*
 yarn-error.log*
-node_modules/
-dist/
-build/
-.nyc_output
-coverage/
-.nyc_output/
-coverage/
-*.lcov
-*.log
+
+# IDE specific
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# OS generated files
+.DS_Store
+Thumbs.db
+
+# Temporary files
 *.tmp
 *.temp
-!.gitkeep
-.lock-wscript
-.env
-.env.local
-.env.development.local
-.env.test.local
-.env.production.local
-.env.*
-!package-lock.json
-!yarn.lock
 
-# Compiled and binary files
-*.exe
-*.dll
-*.so
-*.a
-*.o
-*.obj
-*.out
-*.class
-*.jar
-*.war
-*.ear
+# Compressed files
 *.zip
-*.tar
 *.gz
+*.tar
 *.tgz
 *.bz2
 *.xz
@@ -108,13 +77,4 @@ coverage/
 *.tar.bz2
 *.tar.xz
 *.tar.zst
-
-# OS generated files
-.DS_Store
-.DS_Store?
-._*
-.Spotlight-V100
-.Trashes
-ehthumbs.db
-Thumbs.db
 ```

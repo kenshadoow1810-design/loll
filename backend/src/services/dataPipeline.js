@@ -54,15 +54,15 @@ function normalizePlayerData(rawPlayer) {
   const keys = Object.keys(rawPlayer);
   
   const findKey = (patterns) => {
-    return keys.find(k => patterns.some(p => k.toLowerCase().includes(p)));
+    return keys.find(k => patterns.some(p => k.toLowerCase() === p.toLowerCase() || k.toLowerCase().includes(p.toLowerCase())));
   };
 
   const nameKey = findKey(['player', 'name', 'summoner']);
   const teamKey = findKey(['team', 'org']);
-  const positionKey = findKey(['position', 'role', 'lane']);
+  const positionKey = findKey(['pos', 'position', 'role', 'lane']);
   const gamesKey = findKey(['games', 'gp', 'matches']);
   const kdaKey = findKey(['kda']);
-  const kpKey = findKey(['kill participation', 'kp%']);
+  const kpKey = findKey(['kp', 'kill participation']);
   const goldKey = findKey(['gold per 10', 'gold@10', 'gpm']);
   const dpmKey = findKey(['dpm', 'damage per minute']);
   const cspmKey = findKey(['cspm', 'cs per minute', 'cs/min']);
@@ -77,7 +77,9 @@ function normalizePlayerData(rawPlayer) {
     gold_per_10: parseFloat(rawPlayer[goldKey]) || 0,
     dpm: parseFloat(rawPlayer[dpmKey]) || 0,
     cspm: parseFloat(rawPlayer[cspmKey]) || 0,
-    league: rawPlayer.league
+    league: rawPlayer.league,
+    real_name: rawPlayer.real_name || null,
+    image_url: rawPlayer.image_url || null
   };
 }
 
@@ -98,7 +100,8 @@ function normalizeTeamData(rawTeam) {
     games_played: parseInt(rawTeam[gamesKey]) || 0,
     wins: parseInt(rawTeam[winsKey]) || 0,
     losses: parseInt(rawTeam[lossesKey]) || 0,
-    league: rawTeam.league
+    league: rawTeam.league,
+    logo_url: rawTeam.logo_url || null
   };
 }
 
@@ -109,8 +112,8 @@ async function savePlayersToDB(players) {
     const normalized = normalizePlayerData(player);
     
     const query = `
-      INSERT INTO players (name, team_name, position, league, games_played, kda, kill_participation, gold_per_10, dpm, cspm, updated_at)
-      VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, NOW())
+      INSERT INTO players (name, team_name, position, league, games_played, kda, kill_participation, gold_per_10, dpm, cspm, real_name, image_url, updated_at)
+      VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, NOW())
       ON CONFLICT (name, league) DO UPDATE SET
         team_name = EXCLUDED.team_name,
         position = EXCLUDED.position,
@@ -120,6 +123,8 @@ async function savePlayersToDB(players) {
         gold_per_10 = EXCLUDED.gold_per_10,
         dpm = EXCLUDED.dpm,
         cspm = EXCLUDED.cspm,
+        real_name = EXCLUDED.real_name,
+        image_url = EXCLUDED.image_url,
         updated_at = NOW()
     `;
     
@@ -133,7 +138,9 @@ async function savePlayersToDB(players) {
       normalized.kill_participation,
       normalized.gold_per_10,
       normalized.dpm,
-      normalized.cspm
+      normalized.cspm,
+      normalized.real_name || null,
+      normalized.image_url || null
     ];
     
     await pool.query(query, values);
@@ -149,12 +156,13 @@ async function saveTeamsToDB(teams) {
     const normalized = normalizeTeamData(team);
     
     const query = `
-      INSERT INTO teams (name, league, games_played, wins, losses, updated_at)
-      VALUES ($1, $2, $3, $4, $5, NOW())
+      INSERT INTO teams (name, league, games_played, wins, losses, logo_url, updated_at)
+      VALUES ($1, $2, $3, $4, $5, $6, NOW())
       ON CONFLICT (name, league) DO UPDATE SET
         games_played = EXCLUDED.games_played,
         wins = EXCLUDED.wins,
         losses = EXCLUDED.losses,
+        logo_url = EXCLUDED.logo_url,
         updated_at = NOW()
     `;
     
@@ -163,7 +171,8 @@ async function saveTeamsToDB(teams) {
       normalized.league,
       normalized.games_played,
       normalized.wins,
-      normalized.losses
+      normalized.losses,
+      normalized.logo_url || null
     ];
     
     await pool.query(query, values);
