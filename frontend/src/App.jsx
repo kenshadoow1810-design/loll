@@ -3,8 +3,6 @@ import { Navbar, Footer } from './components/common/Navbar';
 import { Home } from './pages/Home';
 import { Players } from './pages/Players';
 import { PlayerDetail } from './pages/PlayerDetail';
-import { Matches } from './pages/Matches';
-import { News } from './pages/News';
 import { Compare } from './pages/Compare';
 import './index.css';
 
@@ -18,8 +16,6 @@ function App() {
             <Route path="/" element={<Home />} />
             <Route path="/players" element={<Players />} />
             <Route path="/player/:playerId/:league" element={<PlayerDetail />} />
-            <Route path="/matches" element={<Matches />} />
-            <Route path="/news" element={<News />} />
             <Route path="/compare" element={<Compare />} />
           </Routes>
         </main>
