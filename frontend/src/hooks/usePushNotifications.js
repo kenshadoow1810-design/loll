@@ -11,7 +11,7 @@ export function usePushNotifications() {
 
   // Verificar se o navegador suporta notificações push
   useEffect(() => {
-    const checkSupport = () => {
+    const checkSupport = async () => {
       if (!('serviceWorker' in navigator) || !('PushManager' in window)) {
         setIsSupported(false);
         setError('Seu navegador não suporta notificações push');
@@ -24,8 +24,14 @@ export function usePushNotifications() {
       // Verificar permissão atual
       setPermission(Notification.permission);
 
-      // Carregar subscrição existente
-      loadSubscription();
+      // Carregar subscrição existente com timeout para evitar loading infinito
+      try {
+        await loadSubscription();
+      } catch (err) {
+        console.error('Erro ao carregar subscrição:', err);
+        setError(err.message);
+        setLoading(false);
+      }
     };
 
     checkSupport();
@@ -34,7 +40,14 @@ export function usePushNotifications() {
   // Carregar subscrição do Service Worker
   const loadSubscription = async () => {
     try {
-      const registration = await navigator.serviceWorker.ready;
+      // Adicionar timeout para evitar loading infinito
+      const registration = await Promise.race([
+        navigator.serviceWorker.ready,
+        new Promise((_, reject) => 
+          setTimeout(() => reject(new Error('Timeout ao carregar service worker')), 5000)
+        )
+      ]);
+      
       const existingSubscription = await registration.pushManager.getSubscription();
       
       if (existingSubscription) {

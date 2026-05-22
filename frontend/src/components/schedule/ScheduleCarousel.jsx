@@ -23,7 +23,18 @@ export function ScheduleCarousel() {
 
   const fetchMatches = async () => {
     try {
-      const response = await fetch('http://localhost:3000/api/schedule');
+      const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:3001/api';
+      const response = await fetch(`${API_URL}/schedule`, {
+        method: 'GET',
+        headers: {
+          'Accept': 'application/json',
+        },
+      });
+      
+      if (!response.ok) {
+        throw new Error(`Erro HTTP: ${response.status}`);
+      }
+      
       const data = await response.json();
       
       const today = new Date();
@@ -100,7 +111,16 @@ export function ScheduleCarousel() {
   }
 
   if (matches.length === 0) {
-    return null;
+    return (
+      <section className="schedule-section">
+        <div className="schedule-container">
+          <h2 className="schedule-title">
+            <span className="text-gradient">Próximas Partidas</span>
+          </h2>
+          <div className="schedule-loading">Nenhuma partida agendada para os próximos 7 dias.</div>
+        </div>
+      </section>
+    );
   }
 
   return (
