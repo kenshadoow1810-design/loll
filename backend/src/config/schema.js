@@ -85,6 +85,45 @@ const createTables = async () => {
     );
   `;
 
+  const createUserPreferencesTable = `
+    CREATE TABLE IF NOT EXISTS user_preferences (
+      id SERIAL PRIMARY KEY,
+      email VARCHAR(255) UNIQUE,
+      favorite_teams TEXT[], -- Array de IDs ou nomes de times
+      favorite_leagues TEXT[], -- Array de IDs ou nomes de ligas
+      notify_before_match BOOLEAN DEFAULT true,
+      notify_minutes_before INTEGER DEFAULT 15,
+      created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+      updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+    );
+  `;
+
+  const createPushSubscriptionsTable = `
+    CREATE TABLE IF NOT EXISTS push_subscriptions (
+      id SERIAL PRIMARY KEY,
+      endpoint VARCHAR(500) NOT NULL UNIQUE,
+      p256dh VARCHAR(255) NOT NULL,
+      auth VARCHAR(255) NOT NULL,
+      expiration_time TIMESTAMP,
+      created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+      updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+    );
+  `;
+
+  const createNotificationsTable = `
+    CREATE TABLE IF NOT EXISTS notifications (
+      id SERIAL PRIMARY KEY,
+      match_id INTEGER REFERENCES matches(id),
+      title VARCHAR(255) NOT NULL,
+      body TEXT NOT NULL,
+      icon VARCHAR(500),
+      badge VARCHAR(500),
+      data JSONB,
+      sent_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+      status VARCHAR(50) DEFAULT 'pending' -- pending, sent, failed
+    );
+  `;
+
   try {
     await pool.query(createTeamsTable);
     console.log('Teams table created successfully');
@@ -97,6 +136,15 @@ const createTables = async () => {
     
     await pool.query(createMatchesTable);
     console.log('Matches table created successfully');
+    
+    await pool.query(createUserPreferencesTable);
+    console.log('User preferences table created successfully');
+    
+    await pool.query(createPushSubscriptionsTable);
+    console.log('Push subscriptions table created successfully');
+    
+    await pool.query(createNotificationsTable);
+    console.log('Notifications table created successfully');
   } catch (error) {
     console.error('Error creating tables:', error);
     throw error;

@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { LeagueTabs, RankingsTable } from '../components/home/RankingsSection';
 import { ScheduleCarousel } from '../components/schedule/ScheduleCarousel';
+import { NotificationToggle } from '../components/common/NotificationToggle';
 
 export function Home() {
   const [currentLeague, setCurrentLeague] = useState('CBLOL');
@@ -37,8 +38,15 @@ export function Home() {
         </div>
       </section>
 
-      {/* Schedule Carousel Section - Substitui Charts */}
+      {/* Schedule Carousel Section */}
       <ScheduleCarousel />
+
+      {/* Notifications Section */}
+      <section className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+          <NotificationToggle />
+        </div>
+      </section>
 
       {/* Rankings Section - Main Content */}
       <section className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">

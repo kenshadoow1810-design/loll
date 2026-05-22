@@ -1,47 +1,25 @@
 ```
 # Dependencies
 node_modules/
+backend/node_modules/
 
-# Environment variables
+# Environment files
 .env
 .env.local
 .env.*
 
-# Build artifacts
-dist/
-build/
-target/
-
 # Logs
 *.log
 
-# Editor/IDE
+# Editor/IDE files
 .vscode/
 .idea/
 *.swp
 *.swo
 *.tmp
 
-# Python (if present)
-__pycache__/
-*.pyc
-*.pyo
-*.pyd
-.Python
-venv/
-.venv/
-.env
-
-# System files
-.DS_Store
-Thumbs.db
-
-# Coverage reports
-coverage/
-htmlcov/
-.coverage
-
-# Package lock files (preserve existing)
-backend/node_modules/.package-lock.json
-backend/package-lock.json
+# Build artifacts
+dist/
+build/
+target/
 ```
