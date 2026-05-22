@@ -76,17 +76,11 @@ export function PlayerDetail() {
             {/* Player Image - Left Side, Larger */}
             <div className="flex flex-col md:flex-row items-start gap-6">
               <div className="flex-shrink-0">
-                {player.image_url ? (
-                  <img
-                    src={player.image_url}
-                    alt={player.name}
-                    className="w-64 h-64 rounded-2xl object-cover"
-                  />
-                ) : (
-                  <div className="w-64 h-64 rounded-2xl bg-gradient-to-br from-gold-400/20 to-gold-600/20 flex items-center justify-center text-4xl">
-                    {player.teamLogo}
-                  </div>
-                )}
+                <img
+                  src={player.image_url || 'https://static.lolesports.com/players/1675150271520_placeholder.png'}
+                  alt={player.name}
+                  className="w-64 h-64 rounded-2xl object-cover"
+                />
               </div>
 
               <div className="flex-1 pt-2">

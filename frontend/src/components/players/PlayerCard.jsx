@@ -9,17 +9,11 @@ export function PlayerCard({ player }) {
       className="bg-dark-100 border border-gray-700/30 rounded-2xl p-6 card-hover cursor-pointer block"
     >
       <div className="flex items-center gap-4 mb-5">
-        {player.image_url ? (
-          <img 
-            src={player.image_url} 
-            alt={player.name}
-            className="w-24 h-24 rounded-xl object-cover"
-          />
-        ) : (
-          <div className="w-24 h-24 rounded-xl bg-gradient-to-br from-gold-400/20 to-gold-600/20 flex items-center justify-center text-4xl">
-            {player.teamLogo}
-          </div>
-        )}
+        <img 
+          src={player.image_url || 'https://static.lolesports.com/players/1675150271520_placeholder.png'} 
+          alt={player.name}
+          className="w-24 h-24 rounded-xl object-cover"
+        />
         <div>
           <div className="font-bold text-white text-xl">{player.name}</div>
           <div className="text-sm text-gray-400 font-medium">{player.team} • {player.league}</div>
