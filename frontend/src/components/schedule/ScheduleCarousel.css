@@ -230,11 +230,16 @@
   display: flex;
   align-items: center;
   gap: 0.75rem;
+  justify-content: flex-end;
 }
 
 .notification-button-inline {
   display: flex;
   align-items: center;
+}
+
+.notification-button-inline button {
+  width: 100%;
 }
 
 .match-date {

@@ -222,9 +222,6 @@ export function ScheduleCarousel() {
                       </div>
                       
                       <div className="match-actions">
-                        <div className="notification-button-inline">
-                          <NotificationButton />
-                        </div>
                         {streamUrl && (
                           <a 
                             href={streamUrl.trim()}
@@ -238,6 +235,9 @@ export function ScheduleCarousel() {
                             Assistir
                           </a>
                         )}
+                        <div className="notification-button-inline">
+                          <NotificationButton />
+                        </div>
                       </div>
                     </div>
                   </div>

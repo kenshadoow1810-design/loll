@@ -13,10 +13,10 @@ export function PlayerCard({ player }) {
           <img 
             src={player.image_url} 
             alt={player.name}
-            className="w-20 h-20 rounded-xl object-cover"
+            className="w-24 h-24 rounded-xl object-cover"
           />
         ) : (
-          <div className="w-20 h-20 rounded-xl bg-gradient-to-br from-gold-400/20 to-gold-600/20 flex items-center justify-center text-4xl">
+          <div className="w-24 h-24 rounded-xl bg-gradient-to-br from-gold-400/20 to-gold-600/20 flex items-center justify-center text-4xl">
             {player.teamLogo}
           </div>
         )}

@@ -8,9 +8,9 @@ export function TeamCard({ team, league }) {
     >
       <div className="flex flex-col items-center text-center">
         {/* Logo do Time - Maior e sem borda */}
-        <div className="w-28 h-28 rounded-2xl bg-gradient-to-br from-gray-400/10 to-gray-600/10 flex items-center justify-center text-5xl mb-4 group-hover:scale-105 transition-transform">
+        <div className="w-32 h-32 flex items-center justify-center text-5xl mb-4 group-hover:scale-105 transition-transform">
           {team.logo_url ? (
-            <img src={team.logo_url} alt={team.name} className="w-full h-full object-contain p-2" />
+            <img src={team.logo_url} alt={team.name} className="w-full h-full object-contain" />
           ) : (
             <span className="text-4xl"></span>
           )}
