@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { getChampionStats } from '../services/api';
+import { api } from '../services/api';
 import './Champions.css';
 
 const Champions = () => {
