@@ -1,10 +1,38 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
+import { api } from '../../services/api';
 import { LeagueTabs, RankingsTable } from '../components/home/RankingsSection';
-import { TopChampionsChart, TopKDAChart } from '../components/home/StatsCharts';
+import { ScheduleCarousel } from '../components/schedule/ScheduleCarousel';
 
 export function Home() {
-  const [currentLeague, setCurrentLeague] = useState('CBLOL');
-  
+  const [currentLeague, setCurrentLeague] = useState('ALL');
+  const [totalPlayers, setTotalPlayers] = useState(null);
+  const [lastUpdate, setLastUpdate] = useState(null);
+
+  useEffect(() => {
+    // Buscar total de jogadores
+    const fetchTotalPlayers = async () => {
+      try {
+        const data = await api.getTotalPlayersCount();
+        setTotalPlayers(data.total);
+      } catch (error) {
+        console.error('Erro ao buscar total de jogadores:', error);
+      }
+    };
+
+    // Buscar última atualização
+    const fetchLastUpdate = async () => {
+      try {
+        const data = await api.getLastUpdateTime();
+        setLastUpdate(data.formatted);
+      } catch (error) {
+        console.error('Erro ao buscar última atualização:', error);
+      }
+    };
+
+    fetchTotalPlayers();
+    fetchLastUpdate();
+  }, []);
+
   return (
     <div className="animate-fadeIn">
       {/* Hero Section */}
@@ -22,7 +50,9 @@ export function Home() {
           {/* Quick Stats */}
           <div className="flex flex-wrap justify-center gap-6 lg:gap-12">
             <div className="text-center">
-              <div className="font-display font-bold text-3xl text-gold-400">1,247</div>
+              <div className="font-display font-bold text-3xl text-gold-400">
+                {totalPlayers !== null ? totalPlayers.toLocaleString('pt-BR') : '...'}
+              </div>
               <div className="text-xs text-gray-500 uppercase tracking-widest mt-1">Jogadores</div>
             </div>
             <div className="text-center">
@@ -30,23 +60,12 @@ export function Home() {
               <div className="text-xs text-gray-500 uppercase tracking-widest mt-1">Ligas</div>
             </div>
             <div className="text-center">
-              <div className="font-display font-bold text-3xl text-accent-purple">24/7</div>
+              <div className="font-display font-bold text-3xl text-accent-purple">
+                {lastUpdate || '...'}
+              </div>
               <div className="text-xs text-gray-500 uppercase tracking-widest mt-1">Atualização</div>
             </div>
           </div>
-        </div>
-      </section>
-
-      {/* Charts Section */}
-      <section className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
-        <h2 className="font-display font-bold text-2xl text-white mb-6">
-          <span className="text-gradient bg-gradient-to-r from-gold-400 to-gold-600 bg-clip-text text-transparent">
-            Estatísticas Globais
-          </span>
-        </h2>
-        <div className="grid md:grid-cols-2 gap-6">
-          <TopChampionsChart />
-          <TopKDAChart />
         </div>
       </section>
 
@@ -55,6 +74,9 @@ export function Home() {
         <LeagueTabs currentLeague={currentLeague} onLeagueChange={setCurrentLeague} />
         <RankingsTable league={currentLeague} />
       </section>
+
+      {/* Schedule Carousel Section */}
+      <ScheduleCarousel />
     </div>
   );
 }

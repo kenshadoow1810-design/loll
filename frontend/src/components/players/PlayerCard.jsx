@@ -6,33 +6,41 @@ export function PlayerCard({ player }) {
   return (
     <Link
       to={`/player/${player.id}/${player.league}`}
-      className="bg-dark-100 border border-gray-700/30 rounded-2xl p-5 card-hover cursor-pointer block"
+      className="bg-dark-100 border border-gray-700/30 rounded-2xl p-6 card-hover cursor-pointer block"
     >
-      <div className="flex items-center gap-3 mb-4">
-        <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-gold-400/20 to-gold-600/20 border border-gold-600/30 flex items-center justify-center text-xl">
-          {player.teamLogo}
-        </div>
+      <div className="flex items-center gap-4 mb-5">
+        {player.image_url ? (
+          <img 
+            src={player.image_url} 
+            alt={player.name}
+            className="w-20 h-20 rounded-xl object-cover"
+          />
+        ) : (
+          <div className="w-20 h-20 rounded-xl bg-gradient-to-br from-gold-400/20 to-gold-600/20 flex items-center justify-center text-4xl">
+            {player.teamLogo}
+          </div>
+        )}
         <div>
-          <div className="font-bold text-white">{player.name}</div>
-          <div className="text-xs text-gray-500">{player.team} • {player.league}</div>
+          <div className="font-bold text-white text-xl">{player.name}</div>
+          <div className="text-sm text-gray-400 font-medium">{player.team} • {player.league}</div>
         </div>
       </div>
-      <div className="grid grid-cols-3 gap-3 mb-3">
+      <div className="grid grid-cols-3 gap-4 mb-4">
         <div className="text-center">
-          <div className="text-lg font-display font-bold text-gold-400">{player.kda.toFixed(2)}</div>
-          <div className="text-[10px] text-gray-500 uppercase">KDA</div>
+          <div className="text-2xl font-display font-bold text-gold-400">{player.kda.toFixed(2)}</div>
+          <div className="text-xs text-gray-500 uppercase tracking-wide">KDA</div>
         </div>
         <div className="text-center">
-          <div className={`text-lg font-display font-bold ${wrColor}`}>{player.wr}%</div>
-          <div className="text-[10px] text-gray-500 uppercase">WR</div>
+          <div className={`text-2xl font-display font-bold ${wrColor}`}>{player.wr}%</div>
+          <div className="text-xs text-gray-500 uppercase tracking-wide">WR</div>
         </div>
         <div className="text-center">
-          <div className="text-lg font-display font-bold text-accent-blue">{player.kp}%</div>
-          <div className="text-[10px] text-gray-500 uppercase">KP</div>
+          <div className="text-2xl font-display font-bold text-accent-blue">{player.kp}%</div>
+          <div className="text-xs text-gray-500 uppercase tracking-wide">KP</div>
         </div>
       </div>
-      <div className="flex items-center justify-between text-xs text-gray-500">
-        <span>{player.role}</span>
+      <div className="flex items-center justify-between text-sm text-gray-400 font-medium">
+        <span className="uppercase tracking-wide">{player.role}</span>
         <span>{player.games} partidas</span>
       </div>
     </Link>

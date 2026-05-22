@@ -82,3 +82,121 @@ body {
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;
 }
+
+/* Champions page styles */
+.champions-table-container {
+  overflow-x: auto;
+  border-radius: 12px;
+  border: 1px solid rgba(55, 65, 81, 0.5);
+}
+
+.champions-table {
+  width: 100%;
+  border-collapse: collapse;
+  min-width: 1200px;
+}
+
+.champions-table thead {
+  background: linear-gradient(135deg, #D4A836 0%, #B8902C 100%);
+}
+
+.champions-table th {
+  padding: 1rem 0.75rem;
+  text-align: left;
+  font-weight: 600;
+  font-size: 0.875rem;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  cursor: pointer;
+  user-select: none;
+  transition: background 0.2s ease;
+  white-space: nowrap;
+  color: #0F1014;
+}
+
+.champions-table th:hover {
+  background: rgba(255, 255, 255, 0.2);
+}
+
+.champions-table tbody tr {
+  border-bottom: 1px solid rgba(55, 65, 81, 0.3);
+  transition: background 0.2s ease;
+}
+
+.champions-table tbody tr:hover {
+  background: rgba(248, 200, 64, 0.05);
+}
+
+.champions-table td {
+  padding: 1rem 0.75rem;
+  font-size: 0.9rem;
+  color: #E5E7EB;
+}
+
+.champion-cell {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+}
+
+.champion-icon {
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  object-fit: cover;
+  border: 2px solid rgba(212, 168, 54, 0.3);
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
+}
+
+.role-badge {
+  display: inline-block;
+  padding: 0.25rem 0.75rem;
+  border-radius: 20px;
+  font-size: 0.75rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  background: rgba(212, 168, 54, 0.2);
+  color: #F0C040;
+  border: 1px solid rgba(212, 168, 54, 0.3);
+}
+
+.win-rate,
+.ban-rate,
+.kda {
+  font-weight: 600;
+  color: #10b981;
+}
+
+.no-data {
+  text-align: center;
+  padding: 3rem !important;
+  color: #6B7280;
+  font-style: italic;
+}
+
+.results-info {
+  text-align: right;
+  padding: 1rem;
+  color: #9CA3AF;
+  font-size: 0.875rem;
+  font-weight: 500;
+}
+
+.loading,
+.error {
+  text-align: center;
+  padding: 3rem;
+  font-size: 1.1rem;
+}
+
+.loading {
+  color: #F0C040;
+}
+
+.error {
+  color: #EF4444;
+  background: rgba(239, 68, 68, 0.1);
+  border-radius: 8px;
+  margin: 2rem;
+  border: 1px solid rgba(239, 68, 68, 0.3);
+}

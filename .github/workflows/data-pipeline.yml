@@ -1,0 +1,91 @@
+name: Data Pipeline - Extração e Sincronização
+
+on:
+  schedule:
+    # Executar extração de dados a cada hora
+    - cron: '0 * * * *'
+    # Executar sincronização de partidas a cada 30 minutos
+    - cron: '*/30 * * * *'
+    # Executar atualização de imagens diariamente às 3 AM UTC
+    - cron: '0 3 * * *'
+  workflow_dispatch:
+    # Permitir execução manual para testes
+
+jobs:
+  extract-data:
+    runs-on: ubuntu-latest
+    
+    steps:
+      - name: Trigger Data Extraction
+        run: |
+          echo "Iniciando pipeline de extração de dados..."
+          
+          # Fazer requisição POST para o endpoint de extração
+          RESPONSE=$(curl -s -w "\n%{http_code}" -X POST "${{ secrets.API_BASE_URL }}/api/extract" \
+            -H "Content-Type: application/json")
+          
+          HTTP_CODE=$(echo "$RESPONSE" | tail -n1)
+          BODY=$(echo "$RESPONSE" | head -n-1)
+          
+          echo "Resposta da API:"
+          echo "$BODY"
+          
+          if [ "$HTTP_CODE" -eq 200 ]; then
+            echo "✅ Pipeline de extração concluída com sucesso!"
+            exit 0
+          else
+            echo "❌ Erro na extração (HTTP $HTTP_CODE)"
+            exit 1
+          fi
+
+  sync-matches:
+    runs-on: ubuntu-latest
+    
+    steps:
+      - name: Sync Match Schedule
+        run: |
+          echo "Sincronizando agenda de partidas..."
+          
+          # Fazer requisição POST para o endpoint de sincronização
+          RESPONSE=$(curl -s -w "\n%{http_code}" -X POST "${{ secrets.API_BASE_URL }}/api/schedule/sync" \
+            -H "Content-Type: application/json")
+          
+          HTTP_CODE=$(echo "$RESPONSE" | tail -n1)
+          BODY=$(echo "$RESPONSE" | head -n-1)
+          
+          echo "Resposta da API:"
+          echo "$BODY"
+          
+          if [ "$HTTP_CODE" -eq 200 ]; then
+            echo "✅ Sincronização de partidas concluída com sucesso!"
+            exit 0
+          else
+            echo "❌ Erro na sincronização (HTTP $HTTP_CODE)"
+            exit 1
+          fi
+
+  update-images:
+    runs-on: ubuntu-latest
+    
+    steps:
+      - name: Update Images and Real Names
+        run: |
+          echo "Atualizando imagens e nomes reais..."
+          
+          # Fazer requisição POST para o endpoint de atualização de imagens
+          RESPONSE=$(curl -s -w "\n%{http_code}" -X POST "${{ secrets.API_BASE_URL }}/api/update-images" \
+            -H "Content-Type: application/json")
+          
+          HTTP_CODE=$(echo "$RESPONSE" | tail -n1)
+          BODY=$(echo "$RESPONSE" | head -n-1)
+          
+          echo "Resposta da API:"
+          echo "$BODY"
+          
+          if [ "$HTTP_CODE" -eq 200 ]; then
+            echo "✅ Atualização de imagens concluída com sucesso!"
+            exit 0
+          else
+            echo "❌ Erro na atualização de imagens (HTTP $HTTP_CODE)"
+            exit 1
+          fi

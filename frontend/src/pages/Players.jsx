@@ -58,9 +58,17 @@ export function Players() {
                 className="bg-dark-100 border border-gray-700/30 rounded-xl p-4 hover:bg-dark-200/50 transition-all cursor-pointer block"
               >
                 <div className="flex items-center gap-3">
-                  <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-gold-400/20 to-gold-600/20 border border-gold-600/30 flex items-center justify-center text-xl">
-                    {player.teamLogo}
-                  </div>
+                  {player.image_url ? (
+                    <img 
+                      src={player.image_url} 
+                      alt={player.name}
+                      className="w-12 h-12 rounded-xl object-cover border border-gold-600/30"
+                    />
+                  ) : (
+                    <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-gold-400/20 to-gold-600/20 border border-gold-600/30 flex items-center justify-center text-xl">
+                      {player.teamLogo}
+                    </div>
+                  )}
                   <div className="flex-1">
                     <div className="font-semibold text-white">{player.name}</div>
                     <div className="text-xs text-gray-500">{player.team} • {player.league} • {player.role}</div>

@@ -149,9 +149,17 @@ export function Compare() {
               {/* Player 1 Card */}
               <div className="bg-gradient-to-br from-gold-600/10 to-dark-100 border border-gold-600/30 rounded-2xl p-6">
                 <div className="flex items-center gap-4 mb-6">
-                  <div className="w-16 h-16 rounded-full bg-gradient-to-br from-gold-400/20 to-gold-600/20 border border-gold-600/30 flex items-center justify-center text-2xl">
-                    {player1.teamLogo}
-                  </div>
+                  {player1.image_url ? (
+                    <img 
+                      src={player1.image_url} 
+                      alt={player1.name}
+                      className="w-16 h-16 rounded-full object-cover border border-gold-600/30"
+                    />
+                  ) : (
+                    <div className="w-16 h-16 rounded-full bg-gradient-to-br from-gold-400/20 to-gold-600/20 border border-gold-600/30 flex items-center justify-center text-2xl">
+                      {player1.teamLogo}
+                    </div>
+                  )}
                   <div>
                     <h3 className="font-display font-bold text-xl text-white">{player1.name}</h3>
                     <p className="text-gray-400 text-sm">{player1.team} • {player1.role}</p>
@@ -176,9 +184,17 @@ export function Compare() {
               {/* Player 2 Card */}
               <div className="bg-gradient-to-br from-accent-blue/10 to-dark-100 border border-accent-blue/30 rounded-2xl p-6">
                 <div className="flex items-center gap-4 mb-6">
-                  <div className="w-16 h-16 rounded-full bg-gradient-to-br from-accent-blue/20 to-accent-blue/30 border border-accent-blue/30 flex items-center justify-center text-2xl">
-                    {player2.teamLogo}
-                  </div>
+                  {player2.image_url ? (
+                    <img 
+                      src={player2.image_url} 
+                      alt={player2.name}
+                      className="w-16 h-16 rounded-full object-cover border border-accent-blue/30"
+                    />
+                  ) : (
+                    <div className="w-16 h-16 rounded-full bg-gradient-to-br from-accent-blue/20 to-accent-blue/30 border border-accent-blue/30 flex items-center justify-center text-2xl">
+                      {player2.teamLogo}
+                    </div>
+                  )}
                   <div>
                     <h3 className="font-display font-bold text-xl text-white">{player2.name}</h3>
                     <p className="text-gray-400 text-sm">{player2.team} • {player2.role}</p>

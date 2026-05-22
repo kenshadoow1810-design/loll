@@ -1,0 +1,392 @@
+.schedule-section {
+  padding: 2rem 0;
+  background: linear-gradient(180deg, rgba(10, 11, 14, 0) 0%, rgba(10, 11, 14, 0.5) 100%);
+}
+
+.schedule-container {
+  max-width: 900px;
+  margin: 0 auto;
+  padding: 0 1.5rem;
+}
+
+.schedule-title {
+  font-family: var(--font-display);
+  font-size: 1.75rem;
+  font-weight: 700;
+  color: #ffffff;
+}
+
+.schedule-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 1.5rem;
+  position: relative;
+}
+
+.notification-button-container {
+  position: absolute;
+  right: 0;
+  top: 50%;
+  transform: translateY(-50%);
+}
+
+.notification-btn {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  background: linear-gradient(135deg, rgba(240, 192, 64, 0.1) 0%, rgba(240, 192, 64, 0.05) 100%);
+  color: #f0c040;
+  padding: 0.5rem 1rem;
+  border-radius: 20px;
+  font-size: 0.7rem;
+  font-weight: 700;
+  letter-spacing: 0.5px;
+  border: 1px solid rgba(240, 192, 64, 0.2);
+  cursor: pointer;
+  transition: all 0.3s ease;
+  text-transform: uppercase;
+  white-space: nowrap;
+}
+
+.notification-btn:hover {
+  background: linear-gradient(135deg, rgba(240, 192, 64, 0.2) 0%, rgba(240, 192, 64, 0.1) 100%);
+  border-color: rgba(240, 192, 64, 0.4);
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(240, 192, 64, 0.2);
+}
+
+.bell-icon {
+  width: 14px;
+  height: 14px;
+}
+
+.schedule-loading {
+  text-align: center;
+  color: #6b7280;
+  font-size: 1.1rem;
+  padding: 3rem;
+}
+
+.schedule-carousel {
+  position: relative;
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+}
+
+.carousel-track {
+  display: flex;
+  overflow: hidden;
+  width: 100%;
+  position: relative;
+}
+
+.carousel-slide {
+  min-width: 100%;
+  opacity: 0;
+  transform: translateX(20px);
+  transition: all 0.5s ease-in-out;
+  position: absolute;
+  left: 0;
+  right: 0;
+  pointer-events: none;
+}
+
+.carousel-slide.active {
+  opacity: 1;
+  transform: translateX(0);
+  position: relative;
+  pointer-events: auto;
+}
+
+.match-card {
+  background: linear-gradient(135deg, rgba(20, 22, 28, 0.95) 0%, rgba(15, 17, 22, 0.98) 100%);
+  border: 1px solid rgba(240, 192, 64, 0.15);
+  border-radius: 16px;
+  padding: 1.25rem;
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.4), inset 0 1px 0 rgba(255, 255, 255, 0.05);
+  backdrop-filter: blur(10px);
+  transition: all 0.3s ease;
+}
+
+.match-card:hover {
+  border-color: rgba(240, 192, 64, 0.3);
+  box-shadow: 0 12px 40px rgba(240, 192, 64, 0.1), inset 0 1px 0 rgba(255, 255, 255, 0.08);
+  transform: translateY(-2px);
+}
+
+.match-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 1.25rem;
+  padding-bottom: 0.75rem;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+.league-info {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+}
+
+.league-logo {
+  width: 40px;
+  height: 40px;
+  object-fit: contain;
+  filter: drop-shadow(0 2px 4px rgba(0, 0, 0, 0.3));
+}
+
+.league-text {
+  display: flex;
+  flex-direction: column;
+  gap: 0.2rem;
+}
+
+.league-name {
+  font-family: var(--font-display);
+  font-weight: 700;
+  font-size: 1rem;
+  color: #f0c040;
+  letter-spacing: 0.5px;
+}
+
+.tournament-name {
+  font-size: 0.75rem;
+  color: #9ca3af;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.match-format {
+  background: linear-gradient(135deg, rgba(240, 192, 64, 0.15) 0%, rgba(240, 192, 64, 0.08) 100%);
+  color: #f0c040;
+  padding: 0.35rem 0.75rem;
+  border-radius: 20px;
+  font-size: 0.75rem;
+  font-weight: 700;
+  letter-spacing: 0.5px;
+  border: 1px solid rgba(240, 192, 64, 0.2);
+}
+
+.match-body {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 1rem 0;
+}
+
+.team {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.75rem;
+  flex: 1;
+}
+
+.team-logo {
+  width: 70px;
+  height: 70px;
+  object-fit: contain;
+  filter: drop-shadow(0 4px 8px rgba(0, 0, 0, 0.4));
+  transition: transform 0.3s ease;
+}
+
+.team:hover .team-logo {
+  transform: scale(1.05);
+}
+
+.team-name {
+  font-family: var(--font-display);
+  font-weight: 700;
+  font-size: 1.1rem;
+  color: #ffffff;
+  text-align: center;
+  letter-spacing: 0.5px;
+}
+
+.vs-divider {
+  padding: 0 1.5rem;
+  position: relative;
+}
+
+.vs-text {
+  font-family: var(--font-display);
+  font-weight: 900;
+  font-size: 1.25rem;
+  background: linear-gradient(135deg, #f0c040 0%, #d4a017 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+  letter-spacing: 2px;
+}
+
+.match-footer {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-top: 1.25rem;
+  padding-top: 0.75rem;
+  border-top: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+.match-date {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  color: #9ca3af;
+  font-size: 0.875rem;
+}
+
+.calendar-icon {
+  width: 18px;
+  height: 18px;
+  color: #f0c040;
+}
+
+.watch-btn {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  background: linear-gradient(135deg, rgba(240, 192, 64, 0.15) 0%, rgba(240, 192, 64, 0.08) 100%);
+  color: #f0c040;
+  padding: 0.6rem 1.2rem;
+  border-radius: 8px;
+  font-size: 0.875rem;
+  font-weight: 600;
+  text-decoration: none;
+  transition: all 0.3s ease;
+  border: 1px solid rgba(240, 192, 64, 0.2);
+}
+
+.watch-btn:hover {
+  background: linear-gradient(135deg, rgba(240, 192, 64, 0.25) 0%, rgba(240, 192, 64, 0.15) 100%);
+  border-color: rgba(240, 192, 64, 0.4);
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(240, 192, 64, 0.2);
+}
+
+.play-icon {
+  width: 16px;
+  height: 16px;
+}
+
+.carousel-btn {
+  background: linear-gradient(135deg, rgba(240, 192, 64, 0.1) 0%, rgba(240, 192, 64, 0.05) 100%);
+  border: 1px solid rgba(240, 192, 64, 0.2);
+  color: #f0c040;
+  width: 44px;
+  height: 44px;
+  border-radius: 50%;
+  font-size: 1.5rem;
+  font-weight: 700;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  z-index: 10;
+}
+
+.carousel-btn:hover {
+  background: linear-gradient(135deg, rgba(240, 192, 64, 0.2) 0%, rgba(240, 192, 64, 0.1) 100%);
+  border-color: rgba(240, 192, 64, 0.4);
+  transform: scale(1.1);
+  box-shadow: 0 4px 12px rgba(240, 192, 64, 0.2);
+}
+
+.carousel-dots {
+  display: flex;
+  justify-content: center;
+  gap: 0.5rem;
+  margin-top: 1rem;
+}
+
+.dot {
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.2);
+  border: none;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  padding: 0;
+}
+
+.dot:hover {
+  background: rgba(240, 192, 64, 0.5);
+  transform: scale(1.2);
+}
+
+.dot.active {
+  background: #f0c040;
+  width: 24px;
+  border-radius: 5px;
+}
+
+@media (max-width: 768px) {
+  .schedule-header {
+    flex-direction: column;
+    gap: 1rem;
+    align-items: flex-start;
+    position: relative;
+  }
+
+  .notification-button-container {
+    position: static;
+    transform: none;
+    width: 100%;
+  }
+
+  .notification-btn {
+    width: 100%;
+    justify-content: center;
+  }
+}
+
+@media (max-width: 768px) {
+  .schedule-section {
+    padding: 1.5rem 0;
+  }
+
+  .schedule-title {
+    font-size: 1.5rem;
+    margin-bottom: 1rem;
+  }
+
+  .match-card {
+    padding: 1rem;
+  }
+
+  .team-logo {
+    width: 50px;
+    height: 50px;
+  }
+
+  .team-name {
+    font-size: 0.9rem;
+  }
+
+  .vs-text {
+    font-size: 1rem;
+  }
+
+  .match-footer {
+    flex-direction: column;
+    gap: 1rem;
+    align-items: flex-start;
+  }
+
+  .watch-btn {
+    width: 100%;
+    justify-content: center;
+  }
+
+  .carousel-btn {
+    width: 38px;
+    height: 38px;
+    font-size: 1.25rem;
+  }
+}

@@ -3,6 +3,8 @@ const fs = require('fs');
 const path = require('path');
 const csvParser = require('csv-parser');
 const { Readable } = require('stream');
+const https = require('https');
+const axios = require('axios');
 
 const LEAGUES = [
   { name: 'LCS', url: 'https://oracleselixir.com/stats/players/byTournament/LCS%2F2026%20Season%2FSpring%20Season' },
@@ -23,6 +25,17 @@ const TEAMS_LEAGUES = [
   { name: 'CBLOL', urls: [
     'https://oracleselixir.com/stats/teams/byTournament/CBLOL%2F2026%20Season%2FSplit%201',
     'https://oracleselixir.com/stats/teams/byTournament/CBLOL%2F2026%20Season%2FSplit%201%20Playoffs'
+  ]}
+];
+
+const CHAMPIONS_LEAGUES = [
+  { name: 'LCS', url: 'https://oracleselixir.com/stats/champions/byTournament/LCS%2F2026%20Season%2FSpring%20Season' },
+  { name: 'LCK', url: 'https://oracleselixir.com/stats/champions/byTournament/LCK%2F2026%20Season%2FRounds%201-2' },
+  { name: 'LEC', url: 'https://oracleselixir.com/stats/champions/byTournament/LEC%2F2026%20Season%2FSpring%20Season' },
+  { name: 'LPL', url: 'https://oracleselixir.com/stats/champions/byTournament/LPL%2F2026%20Season%2FSplit%202' },
+  { name: 'CBLOL', urls: [
+    'https://oracleselixir.com/stats/champions/byTournament/CBLOL%2F2026%20Season%2FSplit%201',
+    'https://oracleselixir.com/stats/champions/byTournament/CBLOL%2F2026%20Season%2FSplit%201%20Playoffs'
   ]}
 ];
 
@@ -236,4 +249,209 @@ async function scrapeTeams() {
   }
 }
 
-module.exports = { scrapePlayers, scrapeTeams };
+async function scrapeChampions() {
+  console.log('Iniciando scrape de campeões...');
+  const browser = await puppeteer.launch({
+    headless: 'new',
+    args: ['--no-sandbox', '--disable-setuid-sandbox', '--disable-dev-shm-usage']
+  });
+
+  try {
+    const page = await browser.newPage();
+    await page.setViewport({ width: 1920, height: 1080 });
+
+    const allChampions = [];
+
+    for (const league of CHAMPIONS_LEAGUES) {
+      console.log(`Processando liga: ${league.name}`);
+
+      if (league.urls) {
+        let leagueChampions = [];
+        for (let i = 0; i < league.urls.length; i++) {
+          const url = league.urls[i];
+          const filename = `champions_${league.name.toLowerCase()}_${i}.csv`;
+          console.log(`  Baixando URL ${i + 1}/${league.urls.length}: ${url}`);
+
+          const filePath = await downloadCSV(page, url, filename);
+          if (filePath && fs.existsSync(filePath)) {
+            // Verificar se o arquivo CSV tem conteúdo
+            const stats = fs.statSync(filePath);
+            if (stats.size === 0) {
+              console.warn(`⚠️ Arquivo vazio detectado: ${filePath}, tentando novamente...`);
+              await new Promise(resolve => setTimeout(resolve, 2000));
+              const retryPath = await downloadCSV(page, url, filename);
+              if (retryPath && fs.existsSync(retryPath)) {
+                const retryStats = fs.statSync(retryPath);
+                if (retryStats.size === 0) {
+                  console.error(`❌ Arquivo continua vazio após retry: ${retryPath}`);
+                  continue;
+                }
+              } else {
+                console.error(`❌ Falha ao baixar arquivo na segunda tentativa: ${url}`);
+                continue;
+              }
+            }
+            
+            const champions = await parseCSV(filePath);
+            champions.forEach(c => c.league = league.name);
+            leagueChampions = leagueChampions.concat(champions);
+            console.log(`    ${champions.length} campeões extraídos`);
+          } else {
+            console.warn(`⚠️ Nenhum arquivo baixado para: ${url}`);
+          }
+        }
+
+        // Consolidar dados de campeões com mesmo nome e role (SOMAR estatísticas)
+        const champMap = new Map();
+        for (const champ of leagueChampions) {
+          const keys = Object.keys(champ);
+          const findKey = (patterns) => keys.find(k => patterns.some(p => k.toLowerCase() === p.toLowerCase()));
+          
+          const champName = champ[findKey(['champion', 'champ', 'name'])] || 'Unknown';
+          const role = (champ[findKey(['role', 'lane', 'position'])] || 'UNKNOWN').toUpperCase();
+          const iconKey = findKey(['icon', 'image', 'url']);
+          const key = `${champName}-${role}`;
+          
+          if (champMap.has(key)) {
+            const existingChamp = champMap.get(key);
+            const gamesKey = findKey(['games', 'gp', 'games played']);
+            const winsKey = findKey(['wins', 'w']);
+            const bansKey = findKey(['bans']);
+            const killsKey = findKey(['kills', 'k']);
+            const deathsKey = findKey(['deaths', 'd']);
+            const assistsKey = findKey(['assists', 'a']);
+            
+            // SOMAR todas as estatísticas
+            existingChamp[gamesKey] = String((parseInt(existingChamp[gamesKey]) || 0) + (parseInt(champ[gamesKey]) || 0));
+            existingChamp[winsKey] = String((parseInt(existingChamp[winsKey]) || 0) + (parseInt(champ[winsKey]) || 0));
+            existingChamp[bansKey] = String((parseInt(existingChamp[bansKey]) || 0) + (parseInt(champ[bansKey]) || 0));
+            existingChamp[killsKey] = String((parseInt(existingChamp[killsKey]) || 0) + (parseInt(champ[killsKey]) || 0));
+            existingChamp[deathsKey] = String((parseInt(existingChamp[deathsKey]) || 0) + (parseInt(champ[deathsKey]) || 0));
+            existingChamp[assistsKey] = String((parseInt(existingChamp[assistsKey]) || 0) + (parseInt(champ[assistsKey]) || 0));
+            
+            // Manter o icon_url se existir
+            if (!existingChamp[iconKey] && champ[iconKey]) {
+              existingChamp[iconKey] = champ[iconKey];
+            }
+          } else {
+            champMap.set(key, { ...champ });
+          }
+        }
+        const consolidatedChampions = Array.from(champMap.values());
+        console.log(`  Total consolidado para ${league.name}: ${consolidatedChampions.length} campeões`);
+        allChampions.push(...consolidatedChampions);
+      } else {
+        const filename = `champions_${league.name.toLowerCase()}.csv`;
+        console.log(`  Baixando: ${league.url}`);
+
+        const filePath = await downloadCSV(page, league.url, filename);
+        if (filePath && fs.existsSync(filePath)) {
+          // Verificar se o arquivo CSV tem conteúdo
+          const stats = fs.statSync(filePath);
+          if (stats.size === 0) {
+            console.warn(`⚠️ Arquivo vazio detectado: ${filePath}, tentando novamente...`);
+            await new Promise(resolve => setTimeout(resolve, 2000));
+            const retryPath = await downloadCSV(page, league.url, filename);
+            if (retryPath && fs.existsSync(retryPath)) {
+              const retryStats = fs.statSync(retryPath);
+              if (retryStats.size === 0) {
+                console.error(`❌ Arquivo continua vazio após retry: ${retryPath}`);
+                continue;
+              }
+            } else {
+              console.error(`❌ Falha ao baixar arquivo na segunda tentativa: ${league.url}`);
+              continue;
+            }
+          }
+          
+          const champions = await parseCSV(filePath);
+          champions.forEach(c => c.league = league.name);
+          allChampions.push(...champions);
+          console.log(`    ${champions.length} campeões extraídos`);
+        } else {
+          console.warn(`⚠️ Nenhum arquivo baixado para: ${league.url}`);
+        }
+      }
+    }
+
+    console.log(`Total de campeões extraídos: ${allChampions.length}`);
+    
+    // Buscar imagens dos campeões da API do League of Legends
+    console.log('Buscando imagens dos campeões...');
+    const championImages = await fetchChampionImages();
+    
+    // Adicionar URLs das imagens aos campeões
+    const championsWithImages = allChampions.map(champ => {
+      const keys = Object.keys(champ);
+      const findKey = (patterns) => keys.find(k => patterns.some(p => k.toLowerCase() === p.toLowerCase()));
+      const iconKey = findKey(['icon', 'image', 'url']);
+      const champName = champ[findKey(['champion', 'champ', 'name'])] || '';
+      
+      // Se já tem icon_url, manter
+      if (champ[iconKey] && champ[iconKey].trim() !== '') {
+        return champ;
+      }
+      
+      // Tentar encontrar a imagem pelo nome do campeão
+      const formattedName = formatChampionName(champName);
+      const imageUrl = championImages[formattedName] || null;
+      
+      if (imageUrl) {
+        return { ...champ, [iconKey || 'icon_url']: imageUrl };
+      }
+      
+      return champ;
+    });
+    
+    console.log(`${championsWithImages.filter(c => {
+      const keys = Object.keys(c);
+      const findKey = (patterns) => keys.find(k => patterns.some(p => k.toLowerCase() === p.toLowerCase()));
+      const iconKey = findKey(['icon', 'image', 'url']);
+      return c[iconKey];
+    }).length} campeões com imagens`);
+    
+    return championsWithImages;
+  } catch (error) {
+    console.error('Erro no scrape de campeões:', error);
+    throw error;
+  } finally {
+    await browser.close();
+  }
+}
+
+// Função para buscar todas as imagens dos campeões da API do League of Legends
+async function fetchChampionImages() {
+  try {
+    const response = await axios.get('https://ddragon.leagueoflegends.com/cdn/14.1.1/data/en_US/champion.json');
+    const championData = response.data.data;
+    
+    const imageMap = {};
+    for (const [key, champion] of Object.entries(championData)) {
+      imageMap[key.toUpperCase()] = `https://ddragon.leagueoflegends.com/cdn/14.1.1/img/champion/${key}.png`;
+      
+      // Adicionar variações de nome
+      const formattedName = formatChampionName(champion.name);
+      if (formattedName !== key.toUpperCase()) {
+        imageMap[formattedName] = `https://ddragon.leagueoflegends.com/cdn/14.1.1/img/champion/${key}.png`;
+      }
+    }
+    
+    console.log(`✅ ${Object.keys(imageMap).length} imagens de campeões carregadas`);
+    return imageMap;
+  } catch (error) {
+    console.error('❌ Erro ao buscar imagens dos campeões:', error.message);
+    return {};
+  }
+}
+
+// Formatar nome do campeão para comparação
+function formatChampionName(name) {
+  if (!name) return '';
+  return name
+    .normalize('NFD')
+    .replace(/[\u0300-\u036f]/g, '')
+    .replace(/[^a-zA-Z0-9]/g, '')
+    .toUpperCase();
+}
+
+module.exports = { scrapePlayers, scrapeTeams, scrapeChampions };

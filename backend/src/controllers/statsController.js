@@ -23,6 +23,74 @@ const getTeams = async (req, res) => {
   }
 };
 
+const getTeamById = async (req, res) => {
+  try {
+    const { id } = req.params;
+    
+    // Buscar informações do time
+    const teamQuery = 'SELECT * FROM teams WHERE id = $1';
+    const teamResult = await pool.query(teamQuery, [id]);
+    
+    if (teamResult.rows.length === 0) {
+      return res.status(404).json({ error: 'Time não encontrado' });
+    }
+    
+    const team = teamResult.rows[0];
+    
+    // Buscar jogadores do time
+    const playersQuery = `
+      SELECT * FROM players 
+      WHERE team_name = $1 
+      ORDER BY 
+        CASE position 
+          WHEN 'TOP' THEN 1 
+          WHEN 'JUNGLE' THEN 2 
+          WHEN 'MID' THEN 3 
+          WHEN 'ADC' THEN 4 
+          WHEN 'SUPPORT' THEN 5 
+          ELSE 6 
+        END
+    `;
+    const playersResult = await pool.query(playersQuery, [team.name]);
+    
+    // Transformar dados dos jogadores
+    const players = playersResult.rows.map(player => ({
+      id: player.id.toString(),
+      name: player.name,
+      team: player.team_name || 'Unknown',
+      teamLogo: player.logo_url || null,
+      image_url: player.image_url || null,
+      league: player.league,
+      role: player.position || 'Unknown',
+      region: getRegionFromLeague(player.league),
+      kda: parseFloat(player.kda) || 0,
+      csPerMin: parseFloat(player.cspm) || 0,
+      kp: parseFloat(player.kill_participation) || 0,
+      wr: player.win_percentage ? Math.round(player.win_percentage) : 0,
+      games: player.games_played || 0,
+      damage: Math.floor(parseFloat(player.dpm) * 20) || 0,
+      gold: Math.floor(parseFloat(player.gold_per_min) * 10) || 0,
+    }));
+    
+    const teamData = {
+      id: team.id.toString(),
+      name: team.name,
+      league: team.league,
+      logo_url: team.logo_url || null,
+      games: team.games_played || 0,
+      wins: team.wins || 0,
+      losses: team.losses || 0,
+      region: getRegionFromLeague(team.league),
+      players: players,
+    };
+    
+    res.json(teamData);
+  } catch (error) {
+    console.error('Erro ao buscar time:', error);
+    res.status(500).json({ error: 'Erro interno do servidor' });
+  }
+};
+
 const getPlayers = async (req, res) => {
   try {
     const { league } = req.params;
@@ -53,17 +121,18 @@ const getPlayers = async (req, res) => {
       id: player.id.toString(),
       name: player.name,
       team: player.team_name || 'Unknown',
-      teamLogo: getTeamLogo(player.team_name),
+      teamLogo: player.logo_url || null,
+      image_url: player.image_url || null,
       league: player.league,
       role: player.position || 'Unknown',
       region: getRegionFromLeague(player.league),
       kda: parseFloat(player.kda) || 0,
       csPerMin: parseFloat(player.cspm) || 0,
       kp: parseFloat(player.kill_participation) || 0,
-      wr: calculateWinRate(player.games_played, player.wins),
+      wr: player.win_percentage ? Math.round(player.win_percentage) : 0,
       games: player.games_played || 0,
       damage: Math.floor(parseFloat(player.dpm) * 20) || 0,
-      gold: Math.floor(parseFloat(player.gold_per_10) * 100) || 0,
+      gold: Math.floor(parseFloat(player.gold_per_min) * 10) || 0,
     }));
     
     res.json(players);
@@ -89,17 +158,18 @@ const getPlayerById = async (req, res) => {
       id: player.id.toString(),
       name: player.name,
       team: player.team_name || 'Unknown',
-      teamLogo: getTeamLogo(player.team_name),
+      teamLogo: player.logo_url || null,
+      image_url: player.image_url || null,
       league: player.league,
       role: player.position || 'Unknown',
       region: getRegionFromLeague(player.league),
       kda: parseFloat(player.kda) || 0,
       csPerMin: parseFloat(player.cspm) || 0,
       kp: parseFloat(player.kill_participation) || 0,
-      wr: calculateWinRate(player.games_played, player.wins),
+      wr: player.win_percentage ? Math.round(player.win_percentage) : 0,
       games: player.games_played || 0,
       damage: Math.floor(parseFloat(player.dpm) * 20) || 0,
-      gold: Math.floor(parseFloat(player.gold_per_10) * 100) || 0,
+      gold: Math.floor(parseFloat(player.gold_per_min) * 10) || 0,
     };
     
     res.json(playerData);
@@ -129,19 +199,28 @@ const getChampionStats = async (req, res) => {
         paramCount++;
       }
 
-      query += ' ORDER BY games_played DESC'; 
+      query += ' ORDER BY games_played DESC';
+      
+      const result = await pool.query(query, values);
+    
     // Transformar dados para incluir cálculos derivados
     const champions = result.rows.map(champ => ({
       id: champ.id.toString(),
       championName: champ.champion_name,
+      champion_name: champ.champion_name,
       role: champ.role,
-      league: champ.league || 'UNKNOWN',
+      league: champ.league || 'GLOBAL',
       gamesPlayed: champ.games_played || 0,
-      wins: champ.wins || 0,
-      bans: champ.bans || 0,
+      games_played: champ.games_played || 0,
+      win_percentage: champ.win_percentage || 0,
+      ban_percentage: champ.ban_percentage || 0,
       totalKills: champ.total_kills || 0,
+      total_kills: champ.total_kills || 0,
       totalDeaths: champ.total_deaths || 0,
+      total_deaths: champ.total_deaths || 0,
       totalAssists: champ.total_assists || 0,
+      total_assists: champ.total_assists || 0,
+      icon_url: champ.icon_url || null,
     }));
     
     res.json(champions);
@@ -151,9 +230,62 @@ const getChampionStats = async (req, res) => {
   }
 };
 
-module.exports = { getTeams, getPlayers, getPlayerById, getChampionStats };
+const getTotalPlayersCount = async (req, res) => {
+  try {
+    const query = 'SELECT COUNT(*) as total FROM players';
+    const result = await pool.query(query);
+    const count = parseInt(result.rows[0].total) || 0;
+    res.json({ total: count });
+  } catch (error) {
+    console.error('Erro ao contar jogadores:', error);
+    res.status(500).json({ error: 'Erro interno do servidor' });
+  }
+};
+
+const getLastUpdateTime = async (req, res) => {
+  try {
+    // Buscar o horário da última atualização de partidas ou jogadores
+    const query = `
+      SELECT 
+        MAX(updated_at) as last_update 
+      FROM (
+        SELECT updated_at FROM matches WHERE updated_at IS NOT NULL
+        UNION ALL
+        SELECT updated_at FROM players WHERE updated_at IS NOT NULL
+      ) as all_updates
+    `;
+    const result = await pool.query(query);
+    const lastUpdate = result.rows[0]?.last_update;
+    
+    res.json({ 
+      lastUpdate: lastUpdate || new Date().toISOString(),
+      formatted: lastUpdate ? formatLastUpdate(lastUpdate) : 'Agora'
+    });
+  } catch (error) {
+    console.error('Erro ao buscar último update:', error);
+    res.status(500).json({ error: 'Erro interno do servidor' });
+  }
+};
+
+module.exports = { getTeams, getTeamById, getPlayers, getPlayerById, getChampionStats, getTotalPlayersCount, getLastUpdateTime };
 
 // Helper functions
+function formatLastUpdate(dateString) {
+  const date = new Date(dateString);
+  const now = new Date();
+  const diffMs = now - date;
+  const diffMins = Math.floor(diffMs / 60000);
+  
+  if (diffMins < 1) return 'Agora';
+  if (diffMins < 60) return `há ${diffMins} min`;
+  
+  const diffHours = Math.floor(diffMins / 60);
+  if (diffHours < 24) return `há ${diffHours}h`;
+  
+  const diffDays = Math.floor(diffHours / 24);
+  return `há ${diffDays}d`;
+}
+
 function getTeamLogo(teamName) {
   const logos = {
     'LOUD': '🔊',

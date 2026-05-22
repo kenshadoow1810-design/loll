@@ -12,6 +12,7 @@ export function Navbar() {
   const navLinks = [
     { path: '/', label: 'Rankings' },
     { path: '/players', label: 'Jogadores' },
+    { path: '/teams', label: 'Times' },
     { path: '/champions', label: 'Campeões' },
     { path: '/compare', label: 'Comparar' },
   ];
@@ -104,9 +105,17 @@ export function Navbar() {
                       className="flex items-center gap-3 p-3 hover:bg-dark-200 cursor-pointer transition-colors border-b border-gray-700/10 last:border-0"
                       onClick={() => setShowDropdown(false)}
                     >
-                      <div className="w-8 h-8 rounded-full bg-gradient-to-br from-gold-400/20 to-gold-600/20 border border-gold-600/30 flex items-center justify-center text-sm">
-                        {player.teamLogo}
-                      </div>
+                      {player.image_url ? (
+                        <img 
+                          src={player.image_url} 
+                          alt={player.name}
+                          className="w-8 h-8 rounded-full object-cover border border-gold-600/30"
+                        />
+                      ) : (
+                        <div className="w-8 h-8 rounded-full bg-gradient-to-br from-gold-400/20 to-gold-600/20 border border-gold-600/30 flex items-center justify-center text-sm">
+                          {player.teamLogo}
+                        </div>
+                      )}
                       <div className="flex-1 min-w-0">
                         <div className="text-sm font-medium text-white truncate">{player.name}</div>
                         <div className="text-xs text-gray-500">{player.team} • {player.league} • {player.role}</div>
