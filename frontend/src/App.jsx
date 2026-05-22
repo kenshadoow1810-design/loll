@@ -6,6 +6,7 @@ import { PlayerDetail } from './pages/PlayerDetail';
 import { Compare } from './pages/Compare';
 import { Teams } from './pages/Teams';
 import { TeamDetail } from './pages/TeamDetail';
+import Champions from './pages/Champions';
 import './index.css';
 
 function App() {
@@ -21,6 +22,7 @@ function App() {
             <Route path="/compare" element={<Compare />} />
             <Route path="/teams" element={<Teams />} />
             <Route path="/team/:id" element={<TeamDetail />} />
+            <Route path="/champions" element={<Champions />} />
           </Routes>
         </main>
         <Footer />
