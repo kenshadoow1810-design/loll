@@ -45,7 +45,7 @@ const Champions = () => {
 
     // Filtro por nome
     if (searchTerm) {
-      result = result.filter(champ => 
+      result = result.filter(champ =>
         champ.champion_name.toLowerCase().includes(searchTerm.toLowerCase())
       );
     }
@@ -55,7 +55,7 @@ const Champions = () => {
       result = result.filter(champ => champ.role === selectedRole);
     }
 
-    // Filtro por liga (assumindo que os dados têm campo league, se não, ignorar)
+    // Filtro por liga
     if (selectedLeague !== 'GLOBAL') {
       result = result.filter(champ => champ.league === selectedLeague);
     }
@@ -67,17 +67,15 @@ const Champions = () => {
         let bValue = b[sortConfig.key];
 
         // Calcular métricas derivadas se necessário
-        if (sortConfig.key === 'win_rate') {
-          aValue = (a.wins / a.games_played) * 100;
-          bValue = (b.wins / b.games_played) * 100;
+        if (sortConfig.key === 'win_percentage') {
+          aValue = a.win_percentage || 0;
+          bValue = b.win_percentage || 0;
+        } else if (sortConfig.key === 'ban_percentage') {
+          aValue = a.ban_percentage || 0;
+          bValue = b.ban_percentage || 0;
         } else if (sortConfig.key === 'kda') {
           aValue = (a.total_kills + a.total_assists) / Math.max(a.total_deaths, 1);
           bValue = (b.total_kills + b.total_assists) / Math.max(b.total_deaths, 1);
-        } else if (sortConfig.key === 'ban_rate') {
-          const totalGamesA = a.games_played + a.bans;
-          const totalGamesB = b.games_played + b.bans;
-          aValue = (a.bans / totalGamesA) * 100;
-          bValue = (b.bans / totalGamesB) * 100;
         }
 
         if (aValue < bValue) return sortConfig.direction === 'asc' ? -1 : 1;
@@ -88,7 +86,6 @@ const Champions = () => {
 
     setFilteredChampions(result);
   };
-
   const handleSort = (key) => {
     setSortConfig(prev => ({
       key,
@@ -97,8 +94,8 @@ const Champions = () => {
   };
 
   const getSortIcon = (key) => {
-    if (sortConfig.key !== key) return '↕️';
-    return sortConfig.direction === 'asc' ? '↑' : '↓';
+    if (sortConfig.key !== key) return '2195';
+    return sortConfig.direction === 'asc' ? '2191' : '2193';
   };
 
   const calculateKDA = (kills, deaths, assists) => {
@@ -106,14 +103,6 @@ const Champions = () => {
     return ((kills + assists) / deaths).toFixed(2);
   };
 
-  const calculateWinRate = (wins, games) => {
-    return ((wins / games) * 100).toFixed(1);
-  };
-
-  const calculateBanRate = (bans, games) => {
-    const total = games + bans;
-    return ((bans / total) * 100).toFixed(1);
-  };
 
   const getChampionIcon = (championName, iconUrl) => {
     // Priorizar icon_url do backend
@@ -189,20 +178,17 @@ const Champions = () => {
                 <th onClick={() => handleSort('role')}>
                   Role {getSortIcon('role')}
                 </th>
+                <th onClick={() => handleSort('league')}>
+                  Liga {getSortIcon('league')}
+                </th>
                 <th onClick={() => handleSort('games_played')}>
                   Games {getSortIcon('games_played')}
                 </th>
-                <th onClick={() => handleSort('wins')}>
-                  Wins {getSortIcon('wins')}
+                <th onClick={() => handleSort('win_percentage')}>
+                  Win Rate % {getSortIcon('win_percentage')}
                 </th>
-                <th onClick={() => handleSort('win_rate')}>
-                  Win Rate % {getSortIcon('win_rate')}
-                </th>
-                <th onClick={() => handleSort('bans')}>
-                  Bans {getSortIcon('bans')}
-                </th>
-                <th onClick={() => handleSort('ban_rate')}>
-                  Ban Rate % {getSortIcon('ban_rate')}
+                <th onClick={() => handleSort('ban_percentage')}>
+                  Ban Rate % {getSortIcon('ban_percentage')}
                 </th>
                 <th onClick={() => handleSort('total_kills')}>
                   Kills {getSortIcon('total_kills')}
@@ -221,7 +207,7 @@ const Champions = () => {
             <tbody>
               {filteredChampions.length === 0 ? (
                 <tr>
-                  <td colSpan="11" className="no-data">
+                  <td colSpan="10" className="no-data">
                     Nenhum campeão encontrado com os filtros selecionados.
                   </td>
                 </tr>
@@ -243,11 +229,10 @@ const Champions = () => {
                       </div>
                     </td>
                     <td><span className="role-badge">{champ.role}</span></td>
+                    <td>{champ.league || 'GLOBAL'}</td>
                     <td>{champ.games_played}</td>
-                    <td>{champ.wins}</td>
-                    <td className="win-rate">{calculateWinRate(champ.wins, champ.games_played)}%</td>
-                    <td>{champ.bans}</td>
-                    <td className="ban-rate">{calculateBanRate(champ.bans, champ.games_played)}%</td>
+                    <td className="win-rate">{champ.win_percentage?.toFixed(1) || '0.0'}%</td>
+                    <td className="ban-rate">{champ.ban_percentage?.toFixed(1) || '0.0'}%</td>
                     <td>{champ.total_kills}</td>
                     <td>{champ.total_deaths}</td>
                     <td>{champ.total_assists}</td>

@@ -6,11 +6,11 @@ export function TeamCard({ team, league }) {
   return (
     <Link
       to={`/team/${team.id}`}
-      className="bg-dark-100 border border-gray-700/30 rounded-2xl p-6 hover:bg-dark-200/50 hover:border-gold-600/30 transition-all cursor-pointer block group"
+      className="bg-dark-100 border border-gray-700/30 rounded-2xl p-6 hover:bg-dark-200/50 hover:border-gray-600/30 transition-all cursor-pointer block group"
     >
       <div className="flex flex-col items-center text-center">
         {/* Logo do Time - Maior e sem borda */}
-        <div className="w-24 h-24 rounded-2xl bg-gradient-to-br from-gold-400/10 to-gold-600/10 flex items-center justify-center text-5xl mb-4 group-hover:scale-105 transition-transform">
+        <div className="w-24 h-24 rounded-2xl bg-gradient-to-br from-gray-400/10 to-gray-600/10 flex items-center justify-center text-5xl mb-4 group-hover:scale-105 transition-transform">
           {team.logo_url ? (
             <img src={team.logo_url} alt={team.name} className="w-full h-full object-contain p-2" />
           ) : (
@@ -19,13 +19,13 @@ export function TeamCard({ team, league }) {
         </div>
         
         {/* Nome do Time - Destacado */}
-        <h3 className="font-display font-bold text-xl text-white mb-2 group-hover:text-gold-400 transition-colors">
+        <h3 className="font-display font-bold text-xl text-white mb-2 group-hover:text-gray-400 transition-colors">
           {team.name}
         </h3>
         
         {/* Região/Liga */}
-        <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-gold-600/10 border border-gold-600/20 mb-3">
-          <span className="text-xs font-semibold text-gold-400">{league}</span>
+        <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-gray-600/10 border border-gray-600/20 mb-3">
+          <span className="text-xs font-semibold text-gray-400">{league}</span>
         </div>
         
         {/* Informações do Time */}

@@ -2,18 +2,18 @@ import { useState, useEffect } from 'react';
 import { api } from '../../services/api';
 
 const LEAGUES = {
-  ALL: { flag: '🌍', name: 'Todas as Ligas' },
-  CBLOL: { flag: '🇧🇷', name: 'CBLOL' },
-  LCK: { flag: '🇰🇷', name: 'LCK' },
-  LEC: { flag: '🇪🇺', name: 'LEC' },
-  LCS: { flag: '🇺🇸', name: 'LCS' },
-  LPL: { flag: '🇨🇳', name: 'LPL' },
+  ALL: { name: 'Todas as Ligas' },
+  CBLOL: { name: 'CBLOL' },
+  LCK: { name: 'LCK' },
+  LEC: { name: 'LEC' },
+  LCS: { name: 'LCS' },
+  LPL: { name: 'LPL' },
 };
 
 export function LeagueTabs({ currentLeague, onLeagueChange }) {
   return (
     <div className="flex flex-wrap items-center justify-center gap-2 mb-10">
-      {Object.entries(LEAGUES).map(([key, { flag, name }]) => (
+      {Object.entries(LEAGUES).map(([key, { name }]) => (
         <button
           key={key}
           onClick={() => onLeagueChange(key)}
@@ -23,7 +23,7 @@ export function LeagueTabs({ currentLeague, onLeagueChange }) {
               : 'border-gray-700/30 bg-dark-100 text-gray-400 hover:border-gold-600/40 hover:text-gold-400'
           }`}
         >
-          {flag} {name}
+          {name}
         </button>
       ))}
     </div>
@@ -70,7 +70,7 @@ export function RankingsTable({ league }) {
     <div className="bg-dark-100 border border-gray-700/30 rounded-2xl overflow-hidden">
       <div className="px-6 py-4 border-b border-gray-700/30 flex items-center justify-between">
         <h2 className="font-display font-bold text-lg text-gradient bg-gradient-to-r from-gold-400 to-gold-600 bg-clip-text text-transparent">
-          {league === 'ALL' ? '🌍 Global' : `${LEAGUES[league]?.flag || '🌍'} ${league === 'ALL' ? 'Todas as Ligas' : league}`} — Rankings 2026
+          {league === 'ALL' ? 'Global' : `${league}`} — Rankings 2026
         </h2>
         <span className="text-xs text-gray-500">Atualizado: {lastUpdate || 'há alguns minutos'}</span>
       </div>
@@ -92,9 +92,9 @@ export function RankingsTable({ league }) {
             {players.map((player, index) => {
               const rank = index + 1;
               let rankBadge;
-              if (rank === 1) rankBadge = '🥇';
-              else if (rank === 2) rankBadge = '🥈';
-              else if (rank === 3) rankBadge = '🥉';
+              if (rank === 1) rankBadge = <span className="text-gold-400 font-bold">1</span>;
+              else if (rank === 2) rankBadge = <span className="text-gray-400 font-bold">2</span>;
+              else if (rank === 3) rankBadge = <span className="text-amber-600 font-bold">3</span>;
               else rankBadge = <span className="text-gray-500 font-mono">{rank}</span>;
 
               const wrColor = player.wr >= 60 ? 'text-green-400' : player.wr >= 50 ? 'text-yellow-400' : 'text-red-400';

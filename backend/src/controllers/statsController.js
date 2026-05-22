@@ -66,10 +66,10 @@ const getTeamById = async (req, res) => {
       kda: parseFloat(player.kda) || 0,
       csPerMin: parseFloat(player.cspm) || 0,
       kp: parseFloat(player.kill_participation) || 0,
-      wr: calculateWinRate(player.games_played, player.wins),
+      wr: player.win_percentage ? Math.round(player.win_percentage) : 0,
       games: player.games_played || 0,
       damage: Math.floor(parseFloat(player.dpm) * 20) || 0,
-      gold: Math.floor(parseFloat(player.gold_per_10) * 100) || 0,
+      gold: Math.floor(parseFloat(player.gold_per_min) * 10) || 0,
     }));
     
     const teamData = {
@@ -129,10 +129,10 @@ const getPlayers = async (req, res) => {
       kda: parseFloat(player.kda) || 0,
       csPerMin: parseFloat(player.cspm) || 0,
       kp: parseFloat(player.kill_participation) || 0,
-      wr: calculateWinRate(player.games_played, player.wins),
+      wr: player.win_percentage ? Math.round(player.win_percentage) : 0,
       games: player.games_played || 0,
       damage: Math.floor(parseFloat(player.dpm) * 20) || 0,
-      gold: Math.floor(parseFloat(player.gold_per_10) * 100) || 0,
+      gold: Math.floor(parseFloat(player.gold_per_min) * 10) || 0,
     }));
     
     res.json(players);
@@ -166,10 +166,10 @@ const getPlayerById = async (req, res) => {
       kda: parseFloat(player.kda) || 0,
       csPerMin: parseFloat(player.cspm) || 0,
       kp: parseFloat(player.kill_participation) || 0,
-      wr: calculateWinRate(player.games_played, player.wins),
+      wr: player.win_percentage ? Math.round(player.win_percentage) : 0,
       games: player.games_played || 0,
       damage: Math.floor(parseFloat(player.dpm) * 20) || 0,
-      gold: Math.floor(parseFloat(player.gold_per_10) * 100) || 0,
+      gold: Math.floor(parseFloat(player.gold_per_min) * 10) || 0,
     };
     
     res.json(playerData);
@@ -212,8 +212,8 @@ const getChampionStats = async (req, res) => {
       league: champ.league || 'GLOBAL',
       gamesPlayed: champ.games_played || 0,
       games_played: champ.games_played || 0,
-      wins: champ.wins || 0,
-      bans: champ.bans || 0,
+      win_percentage: champ.win_percentage || 0,
+      ban_percentage: champ.ban_percentage || 0,
       totalKills: champ.total_kills || 0,
       total_kills: champ.total_kills || 0,
       totalDeaths: champ.total_deaths || 0,
