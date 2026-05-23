@@ -1,8 +1,6 @@
 import { Link } from 'react-router-dom';
 
 export function TeamCard({ team, league }) {
-  const playerCount = team.players?.length || 0;
-  
   return (
     <Link
       to={`/team/${team.id}`}
@@ -10,11 +8,11 @@ export function TeamCard({ team, league }) {
     >
       <div className="flex flex-col items-center text-center">
         {/* Logo do Time - Maior e sem borda */}
-        <div className="w-24 h-24 rounded-2xl bg-gradient-to-br from-gray-400/10 to-gray-600/10 flex items-center justify-center text-5xl mb-4 group-hover:scale-105 transition-transform">
+        <div className="w-32 h-32 flex items-center justify-center text-5xl mb-4 group-hover:scale-105 transition-transform">
           {team.logo_url ? (
-            <img src={team.logo_url} alt={team.name} className="w-full h-full object-contain p-2" />
+            <img src={team.logo_url} alt={team.name} className="w-full h-full object-contain" />
           ) : (
-            <span className="text-4xl">🎮</span>
+            <span className="text-4xl"></span>
           )}
         </div>
         
@@ -30,10 +28,6 @@ export function TeamCard({ team, league }) {
         
         {/* Informações do Time */}
         <div className="w-full pt-4 border-t border-gray-700/30">
-          <div className="flex justify-between items-center text-sm">
-            <span className="text-gray-500">Jogadores</span>
-            <span className="text-white font-semibold">{playerCount}</span>
-          </div>
           <div className="flex justify-between items-center text-sm mt-2">
             <span className="text-gray-500">Região</span>
             <span className="text-white font-semibold">{team.region || getRegionFromLeague(league)}</span>

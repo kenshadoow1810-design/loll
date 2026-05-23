@@ -108,17 +108,11 @@ export function RankingsTable({ league }) {
                   <td className="px-6 py-4">{rankBadge}</td>
                   <td className="px-6 py-4">
                     <div className="flex items-center gap-3">
-                      {player.image_url ? (
-                        <img 
-                          src={player.image_url} 
-                          alt={player.name}
-                          className="w-9 h-9 rounded-full object-cover border border-gold-600/30"
-                        />
-                      ) : (
-                        <div className="w-9 h-9 rounded-full bg-gradient-to-br from-gold-400/20 to-gold-600/20 border border-gold-600/30 flex items-center justify-center text-sm">
-                          {player.teamLogo}
-                        </div>
-                      )}
+                      <img 
+                        src={player.image_url || 'https://static.lolesports.com/players/1675150271520_placeholder.png'} 
+                        alt={player.name}
+                        className="w-16 h-16 rounded-full object-cover"
+                      />
                       <div>
                         <div className="font-semibold text-white text-sm">{player.name}</div>
                         <div className="text-xs text-gray-500">{player.role}</div>

@@ -131,7 +131,9 @@ export function ScheduleCarousel() {
           <h2 className="schedule-title">
             <span className="text-gradient">Cronograma da Semana</span>
           </h2>
-          <NotificationButton />
+          <div className="notification-button-container">
+            <NotificationButton />
+          </div>
         </div>
         
         <div 
@@ -219,19 +221,24 @@ export function ScheduleCarousel() {
                         <span>{formatDate(match.scheduled_at || match.begin_at)}</span>
                       </div>
                       
-                      {streamUrl && (
-                        <a 
-                          href={streamUrl.trim()}
-                          target="_blank"
-                          rel="noopener noreferrer"
-                          className="watch-btn"
-                        >
-                          <svg className="play-icon" viewBox="0 0 24 24" fill="currentColor">
-                            <path d="M8 5v14l11-7z"/>
-                          </svg>
-                          Assistir
-                        </a>
-                      )}
+                      <div className="match-actions">
+                        {streamUrl && (
+                          <a 
+                            href={streamUrl.trim()}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="watch-btn"
+                          >
+                            <svg className="play-icon" viewBox="0 0 24 24" fill="currentColor">
+                              <path d="M8 5v14l11-7z"/>
+                            </svg>
+                            Assistir
+                          </a>
+                        )}
+                        <div className="notification-button-inline">
+                          <NotificationButton />
+                        </div>
+                      </div>
                     </div>
                   </div>
                 </div>

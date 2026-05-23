@@ -18,17 +18,18 @@ async function saveChampionStatsToDB(champions) {
         total_kills = EXCLUDED.total_kills,
         total_deaths = EXCLUDED.total_deaths,
         total_assists = EXCLUDED.total_assists,
-        icon_url = EXCLUDED.icon_url,
+        icon_url = COALESCE(EXCLUDED.icon_url, champion_stats.icon_url),
         updated_at = NOW()
     `;
     
+    const gamesPlayed = champ.games_played || 1;
     const values = [
       champ.champion_name,
       champ.role,
       champ.league || 'GLOBAL',
       champ.games_played || 0,
-      parseFloat(((champ.wins / champ.games_played) * 100).toFixed(2)) || 0,
-      parseFloat(((champ.bans / champ.games_played) * 100).toFixed(2)) || 0,
+      parseFloat(((champ.wins / gamesPlayed) * 100).toFixed(2)) || 0,
+      parseFloat(((champ.bans / gamesPlayed) * 100).toFixed(2)) || 0,
       champ.kills || 0,
       champ.deaths || 0,
       champ.assists || 0,
@@ -149,6 +150,9 @@ async function savePlayersToDB(players) {
   for (const player of players) {
     const normalized = normalizePlayerData(player);
     
+    // Garante que win_percentage esteja dentro do limite válido (0-100)
+    const safeWinPercentage = Math.min(Math.max(normalized.win_percentage || 0, 0), 100);
+    
     const query = `
       INSERT INTO players (name, team_name, position, league, games_played, kda, kill_participation, gold_per_min, dpm, cspm, win_percentage, real_name, image_url, updated_at)
       VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, NOW())
@@ -178,7 +182,7 @@ async function savePlayersToDB(players) {
       normalized.gold_per_min,
       normalized.dpm,
       normalized.cspm,
-      normalized.win_percentage || 0,
+      safeWinPercentage,
       normalized.real_name || null,
       normalized.image_url || null
     ];
@@ -202,7 +206,7 @@ async function saveTeamsToDB(teams) {
         games_played = EXCLUDED.games_played,
         wins = EXCLUDED.wins,
         losses = EXCLUDED.losses,
-        logo_url = EXCLUDED.logo_url,
+        logo_url = COALESCE(EXCLUDED.logo_url, teams.logo_url),
         updated_at = NOW()
     `;
     

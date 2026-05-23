@@ -64,10 +64,10 @@ export function TeamDetail() {
                   <img
                     src={team.logo_url}
                     alt={team.name}
-                    className="w-32 h-32 rounded-2xl object-contain bg-gradient-to-br from-gold-400/10 to-gold-600/10 p-4"
+                    className="w-40 h-40 object-contain"
                   />
                 ) : (
-                  <div className="w-32 h-32 rounded-2xl bg-gradient-to-br from-gold-400/20 to-gold-600/20 flex items-center justify-center text-6xl">
+                  <div className="w-40 h-40 rounded-2xl bg-gradient-to-br from-gold-400/20 to-gold-600/20 flex items-center justify-center text-6xl">
                     🎮
                   </div>
                 )}

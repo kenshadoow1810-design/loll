@@ -136,6 +136,7 @@ async function scrapePlayers() {
 
       if (league.urls) {
         let leaguePlayers = [];
+        const playerStatsMap = new Map();
         for (let i = 0; i < league.urls.length; i++) {
           const url = league.urls[i];
           const filename = `players_${league.name.toLowerCase()}_${i}.csv`;
@@ -145,12 +146,26 @@ async function scrapePlayers() {
           if (filePath && fs.existsSync(filePath)) {
             const players = await parseCSV(filePath);
             players.forEach(p => p.league = league.name);
-            leaguePlayers = leaguePlayers.concat(players);
+            
+            // Agrupar por jogador e SOMAR estatísticas
+            for (const player of players) {
+              const playerName = player.Player || player.player || 'Unknown';
+              if (playerStatsMap.has(playerName)) {
+                const existingPlayer = playerStatsMap.get(playerName);
+                const gamesKey = Object.keys(player).find(k => k.toLowerCase().includes('games') || k.toLowerCase() === 'gp');
+                const winsKey = Object.keys(player).find(k => k.toLowerCase().includes('win') && !k.toLowerCase().includes('percentage'));
+                
+                existingPlayer[gamesKey] = String((parseInt(existingPlayer[gamesKey]) || 0) + (parseInt(player[gamesKey]) || 0));
+                existingPlayer[winsKey] = String((parseInt(existingPlayer[winsKey]) || 0) + (parseInt(player[winsKey]) || 0));
+              } else {
+                playerStatsMap.set(playerName, { ...player });
+              }
+            }
             console.log(`    ${players.length} jogadores extraídos`);
           }
         }
 
-        const uniquePlayers = Array.from(new Map(leaguePlayers.map(p => [p.Player || p.player, p])).values());
+        const uniquePlayers = Array.from(playerStatsMap.values());
         console.log(`  Total único para ${league.name}: ${uniquePlayers.length} jogadores`);
         allPlayers.push(...uniquePlayers);
       } else {

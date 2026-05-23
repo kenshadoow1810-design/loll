@@ -29,7 +29,7 @@ const Champions = () => {
   const fetchChampions = async () => {
     try {
       setLoading(true);
-      const data = await getChampionStats();
+      const data = await api.getChampionStats();
       setChampions(data);
       setError(null);
     } catch (err) {
@@ -103,21 +103,20 @@ const Champions = () => {
     return ((kills + assists) / deaths).toFixed(2);
   };
 
+  const formatPercentage = (value) => {
+    const numValue = typeof value === 'number' ? value : parseFloat(value);
+    if (isNaN(numValue)) return '0.0';
+    return numValue.toFixed(1);
+  };
+
 
   const getChampionIcon = (championName, iconUrl) => {
-    // Priorizar icon_url do backend
+    // Usar apenas icon_url do banco de dados
     if (iconUrl && iconUrl.trim() !== '') {
       return iconUrl;
     }
-    // Fallback para ddragon se não tiver icon_url
-    if (!championName) return null;
-    const formattedName = championName
-      .normalize('NFD')
-      .replace(/[\u0300-\u036f]/g, '')
-      .replace(/[^a-zA-Z0-9]/g, '')
-      .replace(/([a-z])([A-Z])/g, '$1_$2')
-      .toUpperCase();
-    return `https://ddragon.leagueoflegends.com/cdn/14.1.1/img/champion/${formattedName}.png`;
+    // Fallback para imagem genérica se não tiver icon_url
+    return 'https://ddragon.leagueoflegends.com/cdn/14.1.1/img/champion/Aatrox.png';
   };
 
   if (loading) return <div className="loading">Carregando campeões...</div>;
@@ -178,17 +177,14 @@ const Champions = () => {
                 <th onClick={() => handleSort('role')}>
                   Role {getSortIcon('role')}
                 </th>
-                <th onClick={() => handleSort('league')}>
-                  Liga {getSortIcon('league')}
-                </th>
                 <th onClick={() => handleSort('games_played')}>
                   Games {getSortIcon('games_played')}
                 </th>
                 <th onClick={() => handleSort('win_percentage')}>
                   Win Rate % {getSortIcon('win_percentage')}
                 </th>
-                <th onClick={() => handleSort('ban_percentage')}>
-                  Ban Rate % {getSortIcon('ban_percentage')}
+                <th onClick={() => handleSort('league')}>
+                  Liga {getSortIcon('league')}
                 </th>
                 <th onClick={() => handleSort('total_kills')}>
                   Kills {getSortIcon('total_kills')}
@@ -207,7 +203,7 @@ const Champions = () => {
             <tbody>
               {filteredChampions.length === 0 ? (
                 <tr>
-                  <td colSpan="10" className="no-data">
+                  <td colSpan="9" className="no-data">
                     Nenhum campeão encontrado com os filtros selecionados.
                   </td>
                 </tr>
@@ -229,10 +225,9 @@ const Champions = () => {
                       </div>
                     </td>
                     <td><span className="role-badge">{champ.role}</span></td>
-                    <td>{champ.league || 'GLOBAL'}</td>
                     <td>{champ.games_played}</td>
-                    <td className="win-rate">{champ.win_percentage?.toFixed(1) || '0.0'}%</td>
-                    <td className="ban-rate">{champ.ban_percentage?.toFixed(1) || '0.0'}%</td>
+                    <td className="win-rate">{formatPercentage(champ.win_percentage)}%</td>
+                    <td>{champ.league || 'GLOBAL'}</td>
                     <td>{champ.total_kills}</td>
                     <td>{champ.total_deaths}</td>
                     <td>{champ.total_assists}</td>
