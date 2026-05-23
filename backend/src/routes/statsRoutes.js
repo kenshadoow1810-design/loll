@@ -12,7 +12,7 @@ router.get('/player/:id', getPlayerById);
 
 router.get('/champions', getChampionStats);
 
-router.get('/stats/total-players', getTotalPlayersCount);
-router.get('/stats/last-update', getLastUpdateTime);
+router.get('/total-players', getTotalPlayersCount);
+router.get('/last-update', getLastUpdateTime);
 
 module.exports = router;
