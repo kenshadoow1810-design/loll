@@ -26,8 +26,8 @@ export const api = {
     return await response.json();
   },
 
-  getLastUpdateTime: async () => {
-    const response = await fetch(`${API_BASE_URL}/stats/last-update`);
+  getLastUpdateTime: async (language = 'en') => {
+    const response = await fetch(`${API_BASE_URL}/stats/last-update?language=${language}`);
     if (!response.ok) {
       throw new Error('Failed to fetch last update time');
     }

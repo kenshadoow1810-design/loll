@@ -1,6 +1,5 @@
 import { useState, useEffect } from 'react';
 import './ScheduleCarousel.css';
-import { NotificationButton } from '../common/NotificationButton';
 import { useLanguage } from '../../context/LanguageContext';
 
 export function ScheduleCarousel() {
@@ -129,14 +128,9 @@ export function ScheduleCarousel() {
   return (
     <section className="schedule-section">
       <div className="schedule-container">
-        <div className="schedule-header">
-          <h2 className="schedule-title">
-            <span className="text-gradient">{t('weeklySchedule')}</span>
-          </h2>
-          <div className="notification-button-container">
-            <NotificationButton />
-          </div>
-        </div>
+        <h2 className="schedule-title">
+          <span className="text-gradient">{t('weeklySchedule')}</span>
+        </h2>
 
         <div
           className="schedule-carousel"
@@ -236,9 +230,6 @@ export function ScheduleCarousel() {
                             {t('watch')}
                           </a>
                         )}
-                        <div className="notification-button-inline">
-                          <NotificationButton />
-                        </div>
                       </div>
                     </div>
                   </div>

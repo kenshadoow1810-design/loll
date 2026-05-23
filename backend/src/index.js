@@ -5,7 +5,6 @@ require('dotenv').config();
 const { createTables } = require('./config/schema');
 const statsRoutes = require('./routes/statsRoutes');
 const scheduleRoutes = require('./routes/scheduleRoutes');
-const notificationRoutes = require('./routes/notificationRoutes');
 const { runExtraction } = require('./services/dataPipeline');
 
 const app = express();
@@ -16,7 +15,6 @@ app.use(express.json());
 
 app.use('/api', statsRoutes);
 app.use('/api', scheduleRoutes);
-app.use('/api', notificationRoutes);
 
 app.get('/health', (req, res) => {
   res.json({ status: 'ok', timestamp: new Date().toISOString() });

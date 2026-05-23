@@ -98,34 +98,6 @@ const createTables = async () => {
     );
   `;
 
-  const createPushSubscriptionsTable = `
-    CREATE TABLE IF NOT EXISTS push_subscriptions (
-      id SERIAL PRIMARY KEY,
-      endpoint VARCHAR(500) NOT NULL UNIQUE,
-      p256dh VARCHAR(255) NOT NULL,
-      auth VARCHAR(255) NOT NULL,
-      favorite_teams TEXT[] DEFAULT '{}',
-      favorite_leagues TEXT[] DEFAULT '{}',
-      expiration_time TIMESTAMP,
-      created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-      updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
-    );
-  `;
-
-  const createNotificationsTable = `
-    CREATE TABLE IF NOT EXISTS notifications (
-      id SERIAL PRIMARY KEY,
-      match_id INTEGER REFERENCES matches(id),
-      title VARCHAR(255) NOT NULL,
-      body TEXT NOT NULL,
-      icon VARCHAR(500),
-      badge VARCHAR(500),
-      data JSONB,
-      sent_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-      status VARCHAR(50) DEFAULT 'pending' -- pending, sent, failed
-    );
-  `;
-
   try {
     await pool.query(createTeamsTable);
 
@@ -136,10 +108,6 @@ const createTables = async () => {
     await pool.query(createMatchesTable);
 
     await pool.query(createUserPreferencesTable);
-
-    await pool.query(createPushSubscriptionsTable);
-
-    await pool.query(createNotificationsTable);
 
   } catch (error) {
 

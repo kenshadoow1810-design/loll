@@ -8,7 +8,7 @@ export function Home() {
   const [currentLeague, setCurrentLeague] = useState('ALL');
   const [totalPlayers, setTotalPlayers] = useState(null);
   const [lastUpdate, setLastUpdate] = useState(null);
-  const { t } = useLanguage();
+  const { t, language } = useLanguage();
 
   useEffect(() => {
 
@@ -23,7 +23,7 @@ export function Home() {
 
     const fetchLastUpdate = async () => {
       try {
-        const data = await api.getLastUpdateTime();
+        const data = await api.getLastUpdateTime(language);
         setLastUpdate(data.formatted);
       } catch (error) {
 
@@ -32,7 +32,7 @@ export function Home() {
 
     fetchTotalPlayers();
     fetchLastUpdate();
-  }, []);
+  }, [language]);
 
   return (
     <div className="animate-fadeIn">

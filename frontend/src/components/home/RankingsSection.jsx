@@ -37,7 +37,7 @@ export function RankingsTable({ league }) {
   const [players, setPlayers] = useState([]);
   const [loading, setLoading] = useState(true);
   const [lastUpdate, setLastUpdate] = useState(null);
-  const { t } = useLanguage();
+  const { t, language } = useLanguage();
 
   useEffect(() => {
     const loadRankings = async () => {
@@ -50,7 +50,7 @@ export function RankingsTable({ league }) {
 
         setPlayers(data.slice(0, 10));
 
-        const updateData = await api.getLastUpdateTime();
+        const updateData = await api.getLastUpdateTime(language);
         setLastUpdate(updateData.formatted);
       } catch (error) {
 
@@ -59,7 +59,7 @@ export function RankingsTable({ league }) {
       }
     };
     loadRankings();
-  }, [league]);
+  }, [league, language]);
 
   if (loading) {
     return (

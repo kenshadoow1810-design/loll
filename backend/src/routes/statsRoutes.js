@@ -16,19 +16,3 @@ router.get('/stats/total-players', getTotalPlayersCount);
 router.get('/stats/last-update', getLastUpdateTime);
 
 module.exports = router;
-
-function formatLastUpdate(dateString) {
-  const date = new Date(dateString);
-  const now = new Date();
-  const diffMs = now - date;
-  const diffMins = Math.floor(diffMs / 60000);
-  
-  if (diffMins < 1) return 'Agora';
-  if (diffMins < 60) return `há ${diffMins} min`;
-  
-  const diffHours = Math.floor(diffMins / 60);
-  if (diffHours < 24) return `há ${diffHours}h`;
-  
-  const diffDays = Math.floor(diffHours / 24);
-  return `há ${diffDays}d`;
-}

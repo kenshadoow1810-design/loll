@@ -21,7 +21,11 @@ const translations = {
     allLeagues: 'All Leagues',
     updated: 'Updated',
     minutesAgo: 'a few minutes ago',
-    minuteAgo: ' min ago',
+    minuteAgo: '1 min ago',
+    minutesAgoPlural: '{{count}} min ago',
+    hoursAgoPlural: '{{count}} hours ago',
+    daysAgoPlural: '{{count}} days ago',
+    now: 'Now',
 
     player: 'Player',
     team: 'Team',
@@ -127,6 +131,10 @@ const translations = {
     updated: 'Atualizado',
     minutesAgo: 'há alguns minutos',
     minuteAgo: '1 min atrás',
+    minutesAgoPlural: 'há {{count}} min',
+    hoursAgoPlural: 'há {{count}} horas',
+    daysAgoPlural: 'há {{count}} dias',
+    now: 'Agora',
 
     player: 'Jogador',
     team: 'Time',

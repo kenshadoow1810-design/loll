@@ -244,6 +244,7 @@ const getTotalPlayersCount = async (req, res) => {
 
 const getLastUpdateTime = async (req, res) => {
   try {
+    const { language } = req.query;
 
     const query = `
       SELECT 
@@ -259,7 +260,7 @@ const getLastUpdateTime = async (req, res) => {
     
     res.json({ 
       lastUpdate: lastUpdate || new Date().toISOString(),
-      formatted: lastUpdate ? formatLastUpdate(lastUpdate) : 'Agora'
+      formatted: lastUpdate ? formatLastUpdate(lastUpdate, language || 'en') : (language === 'pt' ? 'Agora' : 'Now')
     });
   } catch (error) {
 
@@ -269,20 +270,20 @@ const getLastUpdateTime = async (req, res) => {
 
 module.exports = { getTeams, getTeamById, getPlayers, getPlayerById, getChampionStats, getTotalPlayersCount, getLastUpdateTime };
 
-function formatLastUpdate(dateString) {
+function formatLastUpdate(dateString, language = 'en') {
   const date = new Date(dateString);
   const now = new Date();
   const diffMs = now - date;
   const diffMins = Math.floor(diffMs / 60000);
   
-  if (diffMins < 1) return 'Agora';
-  if (diffMins < 60) return `há ${diffMins} min`;
+  if (diffMins < 1) return language === 'pt' ? 'Agora' : 'Now';
+  if (diffMins < 60) return language === 'pt' ? `há ${diffMins} min` : `${diffMins} min ago`;
   
   const diffHours = Math.floor(diffMins / 60);
-  if (diffHours < 24) return `há ${diffHours}h`;
+  if (diffHours < 24) return language === 'pt' ? `há ${diffHours} horas` : `${diffHours} hour${diffHours > 1 ? 's' : ''} ago`;
   
   const diffDays = Math.floor(diffHours / 24);
-  return `há ${diffDays}d`;
+  return language === 'pt' ? `há ${diffDays} dias` : `${diffDays} day${diffDays > 1 ? 's' : ''} ago`;
 }
 
 function getTeamLogo(teamName) {

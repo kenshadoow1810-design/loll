@@ -1,46 +1,52 @@
 ```
 # Dependencies
 node_modules/
+venv/
+.venv/
+__pycache__/
+*.egg-info/
+.Python
+.pytest_cache/
+.mypy_cache/
 
-# Build outputs
+# Build artifacts
 dist/
 build/
 target/
+*.pyc
+*.pyo
+*.pyd
+*.so
+*.o
+*.a
+*.obj
+*.out
+*.dll
+*.exe
+
+# Logs and temporary files
+*.log
+*.tmp
+*.swp
+*.swo
+coverage/
+htmlcov/
+.coverage
 
 # Environment variables
 .env
 .env.local
 *.env.*
 
-# IDE files
-.vscode/
-.idea/
-*.swp
-*.swo
-
-# Logs
-*.log
-
-# Python cache (if any Python files exist in project)
-__pycache__/
-*.pyc
-*.pyo
-*.pyd
-
-# Coverage reports
-coverage/
-htmlcov/
-.coverage
-
-# Temporary files
-*.tmp
-*.temp
-
 # OS generated files
 .DS_Store
 Thumbs.db
 
-# Compression artifacts
+# Editors
+.vscode/
+.idea/
+
+# Compression files
 *.zip
 *.gz
 *.tar
@@ -63,85 +69,4 @@ Thumbs.db
 *.tar.bz2
 *.tar.xz
 *.tar.zst
-
-# Testing
-.mypy_cache/
-.pytest_cache/
-.nyc_output/
-coverage/
-
-# Runtime
-npm-debug.log*
-yarn-debug.log*
-yarn-error.log*
-
-# Local configuration
-.env.test
-.env.production
-.env.development
-
-# Database
-*.db
-*.db-journal
-
-# Browsers
-*.css.map
-*.js.map
-
-# Mobile
-*.ipa
-*.apk
-*.aab
-
-# Documentation
-.sphinx/
-docs/_build/
-
-# Virtual environments
-.venv/
-venv/
-ENV/
-
-# Gradle
-.gradle/
-build/
-
-# Maven
-target/
-
-# Ruby
-.bundle/
-Gemfile.lock
-
-# Go
-*.mod
-*.sum
-
-# Java
-*.class
-*.jar
-*.war
-*.ear
-
-# C/C++
-*.o
-*.a
-*.so
-*.dll
-*.exe
-*.out
-*.obj
-
-# Julia
-julia-*/
-
-# Zig
-zig-out/
-
-# Rust
-Cargo.lock
-target/
-
-# Elixir
-mix.lock
 ```
