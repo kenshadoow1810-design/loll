@@ -5,9 +5,6 @@
   "scripts": {
     "start": "node src/index.js",
     "dev": "nodemon src/index.js",
-    "extract": "node -e \"require('./src/services/dataPipeline').runExtraction()\"",
-    "test": "echo \"Error: no test specified\" && exit 1",
-    "update-images": "node src/scripts/updateImages.js",
     "build:frontend": "cd ../frontend && npm install && npm run build",
     "start:prod": "node src/index.js",
     "init-db": "node src/services/dataPipeline.js"
