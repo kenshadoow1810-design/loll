@@ -166,31 +166,31 @@ const Champions = () => {
             <thead>
               <tr>
                 <th onClick={() => handleSort('champion_name')}>
-                  Campeão {getSortIcon('champion_name')}
+                  <span>{t('champion')}</span>
                 </th>
                 <th onClick={() => handleSort('role')}>
-                  Role {getSortIcon('role')}
+                  Role 
                 </th>
                 <th onClick={() => handleSort('games_played')}>
-                  Games {getSortIcon('games_played')}
+                  <span>{t('gamesPlayed')}</span>
                 </th>
                 <th onClick={() => handleSort('win_percentage')}>
-                  Win Rate % {getSortIcon('win_percentage')}
+                  Win Rate % 
                 </th>
                 <th onClick={() => handleSort('league')}>
-                  Liga {getSortIcon('league')}
+                  <span>{t('league')}</span>
                 </th>
                 <th onClick={() => handleSort('total_kills')}>
-                  Kills {getSortIcon('total_kills')}
+                  Kills 
                 </th>
                 <th onClick={() => handleSort('total_deaths')}>
-                  Deaths {getSortIcon('total_deaths')}
+                  Deaths 
                 </th>
                 <th onClick={() => handleSort('total_assists')}>
-                  Assists {getSortIcon('total_assists')}
+                  Assists 
                 </th>
                 <th onClick={() => handleSort('kda')}>
-                  KDA {getSortIcon('kda')}
+                  KDA 
                 </th>
               </tr>
             </thead>
