@@ -10,6 +10,8 @@
     "update-images": "node src/scripts/updateImages.js",
     "build:frontend": "cd ../frontend && npm install && npm run build",
     "start:prod": "node src/index.js"
+    "init-db": "node scripts/init-db.js"
+
   },
   "keywords": [],
   "author": "",
