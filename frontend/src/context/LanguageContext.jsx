@@ -1,5 +1,4 @@
 import { createContext, useContext, useState, useEffect } from 'react';
-
 const LanguageContext = createContext();
 
 const translations = {
@@ -19,11 +18,11 @@ const translations = {
     followBestPlayers: 'Follow the best players in the world in real time. Rankings, KDA, winrate and more.',
     players: 'Players',
     leagues: 'Leagues',
-    update: 'Update',
+    update: 'Last Update',
     allLeagues: 'All Leagues',
     updated: 'Updated',
     minutesAgo: 'a few minutes ago',
-    minuteAgo: '1 min ago',
+    minuteAgo: ' min ago',
 
     // Rankings Table
     player: 'Player',
@@ -73,7 +72,7 @@ const translations = {
     noChampionsFound: 'No champions found with the selected filters.',
     displaying: 'Displaying',
     of: 'of',
-    champions: 'champions',
+    champions: 'Champions',
 
     // Schedule
     upcomingMatches: 'Upcoming Matches',
@@ -81,7 +80,7 @@ const translations = {
     loadingMatches: 'Loading matches...',
     noMatchesScheduled: 'No matches scheduled for the next 7 days.',
     watch: 'Watch',
-
+    bestOf: 'BO',
     // Footer
     unofficialData: 'Unofficial data. Riot Games does not endorse this site.',
     allRightsReserved: 'All rights reserved.',
@@ -112,7 +111,12 @@ const translations = {
     avgKills: 'Avg Kills',
     avgDeaths: 'Avg Deaths',
     avgAssists: 'Avg Assists',
+
+        // Date formats
+    daysOfWeek: ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'],
+    months: ['01', '02', '03', '04', '05', '06', '07', '08', '09', '10', '11', '12'],
   },
+
   pt: {
     // Navbar
     rankings: 'Rankings',
@@ -129,7 +133,7 @@ const translations = {
     followBestPlayers: 'Acompanhe os melhores jogadores do mundo em tempo real. Rankings, KDA, winrate e muito mais.',
     players: 'Jogadores',
     leagues: 'Ligas',
-    update: 'Atualização',
+    update: 'Última Atualização',
     allLeagues: 'Todas as Ligas',
     updated: 'Atualizado',
     minutesAgo: 'há alguns minutos',
@@ -183,7 +187,7 @@ const translations = {
     noChampionsFound: 'Nenhum campeão encontrado com os filtros selecionados.',
     displaying: 'Exibindo',
     of: 'de',
-    champions: 'campeões',
+    champions: 'Campeões',
 
     // Schedule
     upcomingMatches: 'Próximas Partidas',
@@ -191,6 +195,7 @@ const translations = {
     loadingMatches: 'Carregando partidas...',
     noMatchesScheduled: 'Nenhuma partida agendada para os próximos 7 dias.',
     watch: 'Assistir',
+    bestOf: 'MD',
 
     // Footer
     unofficialData: 'Dados não oficiais. Riot Games não endossa este site.',
@@ -222,6 +227,10 @@ const translations = {
     avgKills: 'Média de Kills',
     avgDeaths: 'Média de Deaths',
     avgAssists: 'Média de Assists',
+
+      // Date formats
+    daysOfWeek: ['Dom', 'Seg', 'Ter', 'Qua', '  Qui', 'Sex', 'Sáb'],
+    months: ['01', '02', '03', '04', '05', '06', '07', '08', '09', '10', '11', '12'],
   },
 };
 
