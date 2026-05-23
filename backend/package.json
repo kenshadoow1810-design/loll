@@ -4,6 +4,7 @@
   "main": "src/index.js",
   "scripts": {
     "start": "node src/index.js",
+    "postinstall": "npx puppeteer browsers install chrome"
     "dev": "nodemon src/index.js",
     "extract": "node -e \"require('./src/services/dataPipeline').runExtraction()\"",
     "test": "echo \"Error: no test specified\" && exit 1",
