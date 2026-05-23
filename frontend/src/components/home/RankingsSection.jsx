@@ -1,8 +1,9 @@
 import { useState, useEffect } from 'react';
 import { api } from '../../services/api';
+import { useLanguage } from '../../context/LanguageContext';
 
 const LEAGUES = {
-  ALL: { name: 'Todas as Ligas' },
+  ALL: { name: 'All Leagues' },
   CBLOL: { name: 'CBLOL' },
   LCK: { name: 'LCK' },
   LEC: { name: 'LEC' },
@@ -11,6 +12,8 @@ const LEAGUES = {
 };
 
 export function LeagueTabs({ currentLeague, onLeagueChange }) {
+  const { t } = useLanguage();
+  
   return (
     <div className="flex flex-wrap items-center justify-center gap-2 mb-10">
       {Object.entries(LEAGUES).map(([key, { name }]) => (
@@ -23,7 +26,7 @@ export function LeagueTabs({ currentLeague, onLeagueChange }) {
               : 'border-gray-700/30 bg-dark-100 text-gray-400 hover:border-gold-600/40 hover:text-gold-400'
           }`}
         >
-          {name}
+          {key === 'ALL' ? t('allLeagues') : name}
         </button>
       ))}
     </div>
