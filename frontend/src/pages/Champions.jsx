@@ -1,19 +1,21 @@
 import { useState, useEffect } from 'react';
 import { api } from '../services/api';
+import { useLanguage } from '../context/LanguageContext';
 
 const Champions = () => {
   const [champions, setChampions] = useState([]);
   const [filteredChampions, setFilteredChampions] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
-  
+
   // Filtros
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedRole, setSelectedRole] = useState('ALL');
   const [selectedLeague, setSelectedLeague] = useState('GLOBAL');
-  
+
   // Ordenação
   const [sortConfig, setSortConfig] = useState({ key: 'games_played', direction: 'desc' });
+  const { t } = useLanguage();
 
   const roles = ['ALL', 'TOP', 'JUNGLE', 'MID', 'ADC', 'SUPPORT'];
   const leagues = ['GLOBAL', 'LCS', 'LEC', 'LCK', 'LPL', 'CBLOL'];
@@ -119,15 +121,15 @@ const Champions = () => {
     return 'https://ddragon.leagueoflegends.com/cdn/14.1.1/img/champion/Aatrox.png';
   };
 
-  if (loading) return <div className="loading">Carregando campeões...</div>;
-  if (error) return <div className="error">{error}</div>;
+  if (loading) return <div className="loading">{t('loadingChampions')}</div>;
+  if (error) return <div className="error">{t('errorLoadingChampions')}</div>;
 
   return (
     <div className="pt-24 pb-12 min-h-screen animate-fadeIn">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <h1 className="font-display font-bold text-3xl text-white mb-8">
           <span className="text-gradient bg-gradient-to-r from-gold-400 to-gold-600 bg-clip-text text-transparent">
-            Estatísticas Detalhadas de Campeões
+            {t('championStats')}
           </span>
         </h1>
 
@@ -135,7 +137,7 @@ const Champions = () => {
           <div className="flex-1 min-w-[200px]">
             <input
               type="text"
-              placeholder="Buscar campeão..."
+              placeholder={t('searchChampion')}
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
               className="w-full px-4 py-3 bg-dark-100 border border-gray-700/50 rounded-xl text-sm text-gray-200 placeholder-gray-500 focus:outline-none focus:border-gold-500 focus:ring-1 focus:ring-gold-500/30 transition-all"
@@ -149,7 +151,7 @@ const Champions = () => {
           >
             {roles.map(role => (
               <option key={role} value={role}>
-                {role === 'ALL' ? 'Todas as Roles' : role}
+                {role === 'ALL' ? t('allRoles') : role}
               </option>
             ))}
           </select>
@@ -161,7 +163,7 @@ const Champions = () => {
           >
             {leagues.map(league => (
               <option key={league} value={league}>
-                {league === 'GLOBAL' ? 'Global (Todas)' : league}
+                {league === 'GLOBAL' ? t('global') : league}
               </option>
             ))}
           </select>
@@ -204,7 +206,7 @@ const Champions = () => {
               {filteredChampions.length === 0 ? (
                 <tr>
                   <td colSpan="9" className="no-data">
-                    Nenhum campeão encontrado com os filtros selecionados.
+                    {t('noChampionsFound')}
                   </td>
                 </tr>
               ) : (
@@ -212,8 +214,8 @@ const Champions = () => {
                   <tr key={`${champ.champion_name}-${champ.role}-${index}`}>
                     <td className="champion-name">
                       <div className="champion-cell">
-                        <img 
-                          src={getChampionIcon(champ.champion_name, champ.icon_url)} 
+                        <img
+                          src={getChampionIcon(champ.champion_name, champ.icon_url)}
                           alt={champ.champion_name}
                           className="champion-icon"
                           onError={(e) => {
@@ -240,7 +242,7 @@ const Champions = () => {
         </div>
 
         <div className="results-info">
-          Exibindo {filteredChampions.length} de {champions.length} campeões
+          {t('displaying')} {filteredChampions.length} {t('of')} {champions.length} {t('champions')}
         </div>
       </div>
     </div>
