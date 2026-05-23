@@ -23,7 +23,8 @@ if (process.env.NODE_ENV === 'production') {
   app.use(express.static(frontendPath));
   
   // Todas as rotas que não são API devem retornar o index.html do React
-  app.get('*', (req, res) => {
+  app.get('/*path', (req, res) => {
+
     if (!req.path.startsWith('/api')) {
       res.sendFile(path.join(frontendPath, 'index.html'));
     } else {
