@@ -25,7 +25,8 @@
     "express": "^5.2.1",
     "node-fetch": "^3.3.2",
     "pg": "^8.21.0",
-    "puppeteer": "^24.43.1"
+    "@sparticuz/chromium": "^138.0.2",
+    "puppeteer": "^24.0.0"
   },
   "devDependencies": {
     "nodemon": "^3.0.0"
