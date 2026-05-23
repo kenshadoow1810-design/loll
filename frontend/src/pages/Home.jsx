@@ -38,7 +38,7 @@ export function Home() {
   return (
     <div className="animate-fadeIn">
       {/* Hero Section */}
-      <section className="bg-hero py-16 lg:py-24" style={{ 
+      <section className="bg-hero py-16 lg:py-12" style={{ 
         background: 'radial-gradient(ellipse at 50% 0%, rgba(240,192,64,0.08) 0%, transparent 60%), radial-gradient(ellipse at 80% 50%, rgba(10,200,185,0.05) 0%, transparent 50%), #0A0B0E'
       }}>
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
@@ -71,14 +71,14 @@ export function Home() {
         </div>
       </section>
 
+      {/* Schedule Carousel Section */}
+      <ScheduleCarousel />
+
       {/* Rankings Section - Main Content */}
       <section className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
         <LeagueTabs currentLeague={currentLeague} onLeagueChange={setCurrentLeague} />
         <RankingsTable league={currentLeague} />
       </section>
-
-      {/* Schedule Carousel Section */}
-      <ScheduleCarousel />
     </div>
   );
 }
