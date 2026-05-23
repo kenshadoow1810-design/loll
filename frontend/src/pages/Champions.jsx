@@ -29,7 +29,7 @@ const Champions = () => {
   const fetchChampions = async () => {
     try {
       setLoading(true);
-      const data = await getChampionStats();
+      const data = await api.getChampionStats();
       setChampions(data);
       setError(null);
     } catch (err) {
