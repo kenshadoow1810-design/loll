@@ -1,13 +1,15 @@
 import { useState, useEffect } from 'react';
 import { useParams, useNavigate, Link } from 'react-router-dom';
 import { api } from '../services/api';
+import { useLanguage } from '../context/LanguageContext';
 
 export function TeamDetail() {
   const { id } = useParams();
   const navigate = useNavigate();
   const [team, setTeam] = useState(null);
   const [loading, setLoading] = useState(true);
-  
+  const { t } = useLanguage();
+
   useEffect(() => {
     const loadTeamData = async () => {
       setLoading(true);
@@ -57,7 +59,7 @@ export function TeamDetail() {
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
               </svg>
             </button>
-            
+
             <div className="flex flex-col md:flex-row items-start gap-6">
               <div className="flex-shrink-0">
                 {team.logo_url ? (
@@ -81,20 +83,20 @@ export function TeamDetail() {
                     <span className="px-2 py-1 bg-dark-200 rounded-md text-xs text-gray-400">{team.region}</span>
                   </div>
                 </div>
-                
+
                 {/* Team Stats */}
                 <div className="grid grid-cols-3 gap-4 mt-6">
                   <div className="bg-dark-200 rounded-xl p-4 text-center">
                     <div className="text-2xl font-display font-bold text-white">{team.games}</div>
-                    <div className="text-xs text-gray-500 mt-1 uppercase">Partidas</div>
+                    <div className="text-xs text-gray-500 mt-1 uppercase">{t('matches')}</div>
                   </div>
                   <div className="bg-green-900/20 border border-green-700/30 rounded-xl p-4 text-center">
                     <div className="text-2xl font-display font-bold text-green-400">{team.wins}</div>
-                    <div className="text-xs text-gray-500 mt-1 uppercase">Vitórias</div>
+                    <div className="text-xs text-gray-500 mt-1 uppercase">{t('wins')}</div>
                   </div>
                   <div className="bg-red-900/20 border border-red-700/30 rounded-xl p-4 text-center">
                     <div className="text-2xl font-display font-bold text-red-400">{team.losses}</div>
-                    <div className="text-xs text-gray-500 mt-1 uppercase">Derrotas</div>
+                    <div className="text-xs text-gray-500 mt-1 uppercase">{t('losses')}</div>
                   </div>
                 </div>
               </div>
@@ -103,7 +105,7 @@ export function TeamDetail() {
 
           {/* Players Section */}
           <div className="p-6">
-            <h3 className="font-display font-bold text-xl text-white mb-4">Jogadores</h3>
+            <h3 className="font-display font-bold text-xl text-white mb-4">{t('players')}</h3>
             {team.players && team.players.length > 0 ? (
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
                 {team.players.map(player => (
@@ -140,7 +142,7 @@ export function TeamDetail() {
               </div>
             ) : (
               <div className="text-center py-8 text-gray-500">
-                Nenhum jogador encontrado para este time
+                {t('noPlayersForTeam')}
               </div>
             )}
           </div>
