@@ -1,12 +1,14 @@
 import { useState, useEffect } from 'react';
 import './ScheduleCarousel.css';
 import { NotificationButton } from '../common/NotificationButton';
+import { useLanguage } from '../../context/LanguageContext';
 
 export function ScheduleCarousel() {
   const [matches, setMatches] = useState([]);
   const [loading, setLoading] = useState(true);
   const [currentIndex, setCurrentIndex] = useState(0);
   const [isPaused, setIsPaused] = useState(false);
+  const { t } = useLanguage();
 
   useEffect(() => {
     fetchMatches();
@@ -31,21 +33,21 @@ export function ScheduleCarousel() {
           'Accept': 'application/json',
         },
       });
-      
+
       if (!response.ok) {
         throw new Error(`Erro HTTP: ${response.status}`);
       }
-      
+
       const data = await response.json();
-      
+
       const today = new Date();
       const nextWeek = new Date(today.getTime() + 7 * 24 * 60 * 60 * 1000);
-      
+
       const upcomingMatches = data
         .filter(match => {
           const matchDate = new Date(match.scheduled_at || match.begin_at);
-          return match.status === 'not_started' && 
-                 matchDate >= today && 
+          return match.status === 'not_started' &&
+                 matchDate >= today &&
                  matchDate <= nextWeek;
         })
         .sort((a, b) => {
@@ -65,13 +67,13 @@ export function ScheduleCarousel() {
 
   const formatDate = (dateString) => {
     const date = new Date(dateString);
-    const days = ['Dom', 'Seg', 'Ter', 'Qua', 'Qui', 'Sex', 'Sáb'];
+    const days = t('daysOfWeek');
     const dayName = days[date.getDay()];
     const day = String(date.getDate()).padStart(2, '0');
     const month = String(date.getMonth() + 1).padStart(2, '0');
     const hours = String(date.getHours()).padStart(2, '0');
     const minutes = String(date.getMinutes()).padStart(2, '0');
-    
+
     return `${dayName}, ${day}/${month} - ${hours}:${minutes}`;
   };
 
@@ -103,9 +105,9 @@ export function ScheduleCarousel() {
       <section className="schedule-section">
         <div className="schedule-container">
           <h2 className="schedule-title">
-            <span className="text-gradient">Próximas Partidas</span>
+            <span className="text-gradient">{t('upcomingMatchesTitle')}</span>
           </h2>
-          <div className="schedule-loading">Carregando partidas...</div>
+          <div className="schedule-loading">{t('loadingMatches')}</div>
         </div>
       </section>
     );
@@ -116,9 +118,9 @@ export function ScheduleCarousel() {
       <section className="schedule-section">
         <div className="schedule-container">
           <h2 className="schedule-title">
-            <span className="text-gradient">Próximas Partidas</span>
+            <span className="text-gradient">{t('upcomingMatchesTitle')}</span>
           </h2>
-          <div className="schedule-loading">Nenhuma partida agendada para os próximos 7 dias.</div>
+          <div className="schedule-loading">{t('noMatchesScheduled')}</div>
         </div>
       </section>
     );
@@ -129,14 +131,14 @@ export function ScheduleCarousel() {
       <div className="schedule-container">
         <div className="schedule-header">
           <h2 className="schedule-title">
-            <span className="text-gradient">Cronograma da Semana</span>
+            <span className="text-gradient">{t('weeklySchedule')}</span>
           </h2>
           <div className="notification-button-container">
             <NotificationButton />
           </div>
         </div>
-        
-        <div 
+
+        <div
           className="schedule-carousel"
           onMouseEnter={() => setIsPaused(true)}
           onMouseLeave={() => setIsPaused(false)}
@@ -156,16 +158,16 @@ export function ScheduleCarousel() {
               const streamUrl = hasStream ? match.streams_list.find(s => s.main)?.raw_url : null;
 
               return (
-                <div 
-                  key={match.id} 
+                <div
+                  key={match.id}
                   className={`carousel-slide ${index === currentIndex ? 'active' : ''}`}
                 >
                   <div className="match-card">
                     <div className="match-header">
                       <div className="league-info">
                         {league?.image_url && (
-                          <img 
-                            src={league.image_url.trim()} 
+                          <img
+                            src={league.image_url.trim()}
                             alt={league.name}
                             className="league-logo"
                           />
@@ -176,14 +178,13 @@ export function ScheduleCarousel() {
                         </div>
                       </div>
                       <div className="match-format">
-                        BO{match.number_of_games || 1}
+                        <div className='best-of'>{t('bestOf')}{match.number_of_games || 1}</div>
                       </div>
                     </div>
-
                     <div className="match-body">
                       <div className="team team-left">
-                        <img 
-                          src={getTeamImage(team1)} 
+                        <img
+                          src={getTeamImage(team1)}
                           alt={getTeamName(team1)}
                           className="team-logo"
                           onError={(e) => {
@@ -198,8 +199,8 @@ export function ScheduleCarousel() {
                       </div>
 
                       <div className="team team-right">
-                        <img 
-                          src={getTeamImage(team2)} 
+                        <img
+                          src={getTeamImage(team2)}
                           alt={getTeamName(team2)}
                           className="team-logo"
                           onError={(e) => {
@@ -220,10 +221,10 @@ export function ScheduleCarousel() {
                         </svg>
                         <span>{formatDate(match.scheduled_at || match.begin_at)}</span>
                       </div>
-                      
+
                       <div className="match-actions">
                         {streamUrl && (
-                          <a 
+                          <a
                             href={streamUrl.trim()}
                             target="_blank"
                             rel="noopener noreferrer"
@@ -232,7 +233,7 @@ export function ScheduleCarousel() {
                             <svg className="play-icon" viewBox="0 0 24 24" fill="currentColor">
                               <path d="M8 5v14l11-7z"/>
                             </svg>
-                            Assistir
+                            {t('watch')}
                           </a>
                         )}
                         <div className="notification-button-inline">
