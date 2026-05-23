@@ -13,7 +13,6 @@ export function ChartsSection() {
     Chart.defaults.borderColor = 'rgba(120,90,40,0.15)';
     Chart.defaults.font.family = 'Inter';
 
-    // League Winrate Bar Chart
     if (leagueWRChartRef.current) {
       chartInstances.current.leagueWR = new Chart(leagueWRChartRef.current, {
         type: 'bar',
@@ -36,7 +35,6 @@ export function ChartsSection() {
       });
     }
 
-    // Top KDA Horizontal Bar
     if (topKDAChartRef.current) {
       chartInstances.current.topKDA = new Chart(topKDAChartRef.current, {
         type: 'bar',
@@ -60,7 +58,6 @@ export function ChartsSection() {
       });
     }
 
-    // Champ Pick Rate
     if (champPickChartRef.current) {
       chartInstances.current.champPick = new Chart(champPickChartRef.current, {
         type: 'doughnut',
@@ -82,7 +79,6 @@ export function ChartsSection() {
       });
     }
 
-    // Radar Chart (Faker)
     if (radarChartRef.current) {
       chartInstances.current.radar = new Chart(radarChartRef.current, {
         type: 'radar',

@@ -4,16 +4,13 @@ const pool = require('../config/database');
 const PANDASCORE_API_KEY = process.env.PANDASCORE_API_KEY || 'your_api_key_here';
 const PANDASCORE_BASE_URL = 'https://api.pandascore.co';
 
-// IDs das ligas principais
-const LEAGUE_IDS = [293, 4198, 4197, 4407, 302]; // LCK, LCS, LEC, LPL, CBLOL
+const LEAGUE_IDS = [293, 4198, 4197, 4407, 302];
 
 const fetchAndStoreMatches = async () => {
   try {
-    console.log('Buscando partidas da API PandaScore...');
 
     const allMatches = [];
 
-    // Buscar partidas de cada liga separadamente
     for (const leagueId of LEAGUE_IDS) {
       try {
         const response = await axios.get(`${PANDASCORE_BASE_URL}/lol/matches/upcoming`, {
@@ -30,14 +27,12 @@ const fetchAndStoreMatches = async () => {
 
         if (response.data && Array.isArray(response.data)) {
           allMatches.push(...response.data);
-          console.log(`${response.data.length} partidas encontradas para a liga ${leagueId}`);
+
         }
       } catch (error) {
-        console.error(`Erro ao buscar partidas da liga ${leagueId}:`, error.message);
+
       }
     }
-
-    console.log(`Total de ${allMatches.length} partidas encontradas em todas as ligas`);
 
     const today = new Date();
     const nextWeek = new Date(today.getTime() + 7 * 24 * 60 * 60 * 1000);
@@ -135,11 +130,9 @@ const fetchAndStoreMatches = async () => {
       }
     }
 
-    console.log(`Partidas processadas: ${insertedCount} inseridas, ${updatedCount} atualizadas, ${skippedCount} ignoradas (fora do período ou já iniciadas)`);
-
     return { inserted: insertedCount, updated: updatedCount, skipped: skippedCount };
   } catch (error) {
-    console.error('Erro ao buscar e armazenar partidas:', error.message);
+
     throw error;
   }
 };
@@ -163,7 +156,7 @@ const getUpcomingMatches = async () => {
     const result = await pool.query(query);
     return result.rows;
   } catch (error) {
-    console.error('Erro ao buscar partidas do banco:', error.message);
+
     throw error;
   }
 };

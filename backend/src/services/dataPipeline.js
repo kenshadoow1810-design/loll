@@ -1,9 +1,7 @@
 const pool = require('../config/database');
 const { scrapePlayers, scrapeTeams, scrapeChampions } = require('./scrapingService');
 
-// Função para salvar estatísticas de campeões no banco de dados
 async function saveChampionStatsToDB(champions) {
-  console.log(`Salvando ${champions.length} registros de campeões no banco...`);
 
   for (const rawChamp of champions) {
     const champ = normalizeChampionData(rawChamp);
@@ -39,7 +37,6 @@ async function saveChampionStatsToDB(champions) {
     await pool.query(query, values);
   }
 
-  console.log('Estatísticas de campeões salvas com sucesso!');
 }
 
 function normalizePlayerData(rawPlayer) {
@@ -64,7 +61,6 @@ function normalizePlayerData(rawPlayer) {
   const gamesPlayed = parseInt(rawPlayer[gamesKey]) || 0;
   const wins = parseInt(rawPlayer[winsKey]) || 0;
 
-  // Try to get win_percentage directly from CSV first (e.g., "65%"), otherwise calculate it
   let winPercentage;
   if (winPercentageKey && rawPlayer[winPercentageKey]) {
     const rawWinPct = rawPlayer[winPercentageKey];
@@ -119,11 +115,11 @@ function normalizeChampionData(rawChampion) {
     return keys.find(k => {
       const keyLower = k.toLowerCase();
       return patterns.some(p => {
-        // Para patterns de letra única (k, d, a), faz match exato
+
         if (p.length === 1) {
           return keyLower === p.toLowerCase();
         }
-        // Para outros patterns, verifica igualdade ou inclusão
+
         return keyLower === p.toLowerCase() || keyLower.includes(p.toLowerCase());
       });
     });
@@ -154,12 +150,10 @@ function normalizeChampionData(rawChampion) {
 }
 
 async function savePlayersToDB(players) {
-  console.log(`Salvando ${players.length} jogadores no banco...`);
 
   for (const player of players) {
     const normalized = normalizePlayerData(player);
 
-    // Garante que win_percentage esteja dentro do limite válido (0-100)
     const safeWinPercentage = Math.min(Math.max(normalized.win_percentage || 0, 0), 100);
 
     const query = `
@@ -199,11 +193,9 @@ async function savePlayersToDB(players) {
     await pool.query(query, values);
   }
 
-  console.log('Jogadores salvos com sucesso!');
 }
 
 async function saveTeamsToDB(teams) {
-  console.log(`Salvando ${teams.length} times no banco...`);
 
   for (const team of teams) {
     const normalized = normalizeTeamData(team);
@@ -231,12 +223,10 @@ async function saveTeamsToDB(teams) {
     await pool.query(query, values);
   }
 
-  console.log('Times salvos com sucesso!');
 }
 
 async function runExtraction() {
   try {
-    console.log('=== Iniciando Pipeline de Extração ===');
 
     const players = await scrapePlayers();
     await savePlayersToDB(players);
@@ -247,9 +237,8 @@ async function runExtraction() {
     const champions = await scrapeChampions();
     await saveChampionStatsToDB(champions);
 
-    console.log('=== Pipeline Concluída com Sucesso ===');
   } catch (error) {
-    console.error('Erro na pipeline de extração:', error);
+
     throw error;
   }
 }

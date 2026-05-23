@@ -17,7 +17,7 @@ export function NotificationToggle() {
       await subscribeToPush();
       alert('Notificações ativadas com sucesso! Você será notificado sobre partidas próximas.');
     } catch (err) {
-      console.error('Erro ao ativar notificações:', err);
+
       alert('Erro ao ativar notificações: ' + err.message);
     }
   };
@@ -27,7 +27,7 @@ export function NotificationToggle() {
       await unsubscribe();
       alert('Notificações desativadas.');
     } catch (err) {
-      console.error('Erro ao desativar notificações:', err);
+
       alert('Erro ao desativar notificações: ' + err.message);
     }
   };

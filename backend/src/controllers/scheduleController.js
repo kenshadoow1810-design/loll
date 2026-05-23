@@ -51,7 +51,7 @@ exports.getSchedule = async (req, res) => {
 
     res.json(formattedMatches);
   } catch (error) {
-    console.error('Erro ao buscar cronograma de partidas:', error.message);
+
     res.status(500).json({ 
       error: 'Erro interno ao buscar partidas' 
     });
@@ -60,14 +60,14 @@ exports.getSchedule = async (req, res) => {
 
 exports.syncMatches = async (req, res) => {
   try {
-    console.log('Sincronização manual de partidas iniciada...');
+
     const result = await fetchAndStoreMatches();
     res.json({ 
       message: 'Sincronização concluída com sucesso',
       ...result
     });
   } catch (error) {
-    console.error('Erro na sincronização manual:', error);
+
     res.status(500).json({ error: 'Erro ao sincronizar partidas' });
   }
 };

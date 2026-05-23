@@ -23,7 +23,7 @@ export function TeamDetail() {
 
         setTeam(teamData);
       } catch (error) {
-        console.error('Error loading team:', error);
+
         navigate('/teams');
       } finally {
         setLoading(false);
@@ -48,7 +48,7 @@ export function TeamDetail() {
   return (
     <div className="pt-24 pb-12 min-h-screen animate-fadeIn">
       <div className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8">
-        {/* Team Header */}
+        {}
         <div className="bg-dark-100 border border-gray-700/30 rounded-2xl overflow-hidden">
           <div className="relative p-6 pb-4 border-b border-gray-700/30">
             <button
@@ -84,7 +84,7 @@ export function TeamDetail() {
                   </div>
                 </div>
 
-                {/* Team Stats */}
+                {}
                 <div className="grid grid-cols-3 gap-4 mt-6">
                   <div className="bg-dark-200 rounded-xl p-4 text-center">
                     <div className="text-2xl font-display font-bold text-white">{team.games}</div>
@@ -103,7 +103,7 @@ export function TeamDetail() {
             </div>
           </div>
 
-          {/* Players Section */}
+          {}
           <div className="p-6">
             <h3 className="font-display font-bold text-xl text-white mb-4">{t('players')}</h3>
             {team.players && team.players.length > 0 ? (

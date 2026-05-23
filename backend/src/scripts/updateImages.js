@@ -4,7 +4,6 @@ const pool = require('../config/database');
 
 const API_BASE_URL = 'https://api.citoapi.com/api/v1/lol/teams';
 
-// Converter nome do time para slug da API
 function convertToSlug(teamName) {
   return teamName
     .toLowerCase()
@@ -16,7 +15,6 @@ function convertToSlug(teamName) {
     .replace(/-+/g, '-');
 }
 
-// Caso precise mapear alguns nomes específicos
 const TEAM_NAME_MAPPINGS = {
     'RED Canids': 'red',
     'Movistar KOI': 'movistar',
@@ -56,18 +54,12 @@ async function fetchTeamRoster(teamSlug) {
   const token = process.env.CITO_API_TOKEN;
 
   if (!token) {
-    console.error('❌ CITO_API_TOKEN não configurado no .env');
+
     throw new Error('API token not configured');
   }
 
-  console.log(
-    `  Token configurado: Sim (${token.substring(0, 5)}...)`
-  );
-
   try {
     const url = `${API_BASE_URL}/${teamSlug}`;
-
-    console.log(`  Fetching: ${url}`);
 
     const response = await fetch(url, {
       method: 'GET',
@@ -78,23 +70,18 @@ async function fetchTeamRoster(teamSlug) {
       }
     });
 
-    console.log(`  Status HTTP: ${response.status}`);
-
     if (!response.ok) {
       if (response.status === 404) {
-        console.log(`    ⚠️ Time "${teamSlug}" não encontrado`);
+
         return null;
       }
 
       if (response.status === 429) {
-        console.log(`    ⚠️ Rate limit atingido`);
+
         throw new Error('Rate limit exceeded');
       }
 
       const errorText = await response.text();
-
-      console.log(`    ❌ Erro HTTP ${response.status}`);
-      console.log(errorText);
 
       return null;
     }
@@ -107,34 +94,18 @@ async function fetchTeamRoster(teamSlug) {
       throw error;
     }
 
-    console.error(
-      `    ❌ Erro ao buscar ${teamSlug}:`,
-      error.message
-    );
-
     return null;
   }
 }
 
 async function updateImagesAndRealNames() {
-  console.log('=== Iniciando atualização ===\n');
 
   try {
-    // Buscar times
+
     const teams = await getTeamsFromDB();
 
-    console.log(
-      `Encontrados ${teams.length} times no banco\n`
-    );
-
-    // Buscar jogadores
     const players = await getPlayersFromDB();
 
-    console.log(
-      `Encontrados ${players.length} jogadores no banco\n`
-    );
-
-    // Agrupar jogadores por time+liga
     const playersByTeam = new Map();
 
     for (const player of players) {
@@ -153,12 +124,9 @@ async function updateImagesAndRealNames() {
 
     const MAX_API_CALLS = 200;
 
-    // Processar times
     for (const team of teams) {
       if (apiCallsCount >= MAX_API_CALLS) {
-        console.log(
-          `\n⚠️ Limite diário de ${MAX_API_CALLS} requisições atingido`
-        );
+
         break;
       }
 
@@ -168,21 +136,13 @@ async function updateImagesAndRealNames() {
         TEAM_NAME_MAPPINGS[teamName] ||
         convertToSlug(teamName);
 
-      console.log(
-        `Processando time: ${teamName} (slug: ${teamSlug})`
-      );
-
-      // Buscar dados na API
       const rosterData = await fetchTeamRoster(teamSlug);
 
       if (!rosterData || !rosterData.roster) {
-        console.log(
-          `  ⚠️ Sem roster para ${teamName}\n`
-        );
+
         continue;
       }
 
-      // Atualizar logo do time
       const logoUrl = rosterData.logoUrl || null;
 
       if (logoUrl) {
@@ -200,17 +160,10 @@ async function updateImagesAndRealNames() {
           team.league
         ]);
 
-        console.log(`  ✅ Logo atualizada`);
       }
 
-      // Jogadores da API
       const apiPlayers = rosterData.roster || [];
 
-      console.log(
-        `  Jogadores encontrados: ${apiPlayers.length}`
-      );
-
-      // Jogadores do banco desse time
       const teamPlayers =
         playersByTeam.get(
           `${teamName}-${team.league}`
@@ -224,7 +177,6 @@ async function updateImagesAndRealNames() {
           continue;
         }
 
-        // Buscar jogador correspondente
         const dbPlayer = teamPlayers.find(
           p =>
             p.name?.trim().toLowerCase() ===
@@ -232,15 +184,11 @@ async function updateImagesAndRealNames() {
         );
 
         if (!dbPlayer) {
-          console.log(
-            `    ⏭️ ${apiPlayerName} não encontrado no banco`
-          );
 
           totalSkipped++;
           continue;
         }
 
-        // Dados do jogador
         const imageUrl =
           apiPlayer.imageUrl ||
           apiPlayer.player?.imageUrl ||
@@ -250,7 +198,6 @@ async function updateImagesAndRealNames() {
           apiPlayer.player?.realName ||
           null;
 
-        // Atualizar jogador
         const updatePlayerQuery = `
           UPDATE players
           SET image_url = COALESCE($1, image_url),
@@ -265,28 +212,11 @@ async function updateImagesAndRealNames() {
           dbPlayer.id
         ]);
 
-        console.log(
-          `    ✅ ${apiPlayerName} atualizado`
-        );
-
-        console.log(
-          `       Foto: ${imageUrl ? 'Sim' : 'Não'}`
-        );
-
-        console.log(
-          `       Nome real: ${realName || 'Não'}`
-        );
-
         totalUpdated++;
       }
 
       apiCallsCount++;
 
-      console.log(
-        `  Requisições usadas: ${apiCallsCount}/${MAX_API_CALLS}\n`
-      );
-
-      // Delay para evitar rate limit
       if (apiCallsCount < MAX_API_CALLS) {
         await new Promise(resolve =>
           setTimeout(resolve, 500)
@@ -294,37 +224,20 @@ async function updateImagesAndRealNames() {
       }
     }
 
-    console.log('\n=== RESUMO ===');
-
-    console.log(
-      `Jogadores atualizados: ${totalUpdated}`
-    );
-
-    console.log(
-      `Jogadores ignorados: ${totalSkipped}`
-    );
-
-    console.log(
-      `Requisições usadas: ${apiCallsCount}`
-    );
-
-    console.log('\n=== Finalizado ===');
   } catch (error) {
-    console.error('\n❌ Erro geral:', error);
 
     throw error;
   }
 }
 
-// Executar diretamente
 if (require.main === module) {
   updateImagesAndRealNames()
     .then(() => {
-      console.log('\n✅ Script finalizado');
+
       process.exit(0);
     })
     .catch(error => {
-      console.error('\n❌ Script falhou:', error);
+
       process.exit(1);
     });
 }

@@ -15,7 +15,7 @@ export function Players() {
         const data = await api.getAllPlayers();
         setPlayers(data);
       } catch (error) {
-        console.error('Error loading players:', error);
+
       } finally {
         setLoading(false);
       }
@@ -38,7 +38,7 @@ export function Players() {
           </span>
         </h1>
 
-        {/* Search */}
+        {}
         <div className="mb-8">
           <input
             type="text"

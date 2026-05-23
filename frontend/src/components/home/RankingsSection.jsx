@@ -43,18 +43,17 @@ export function RankingsTable({ league }) {
     const loadRankings = async () => {
       setLoading(true);
       try {
-        // Se league for 'ALL', busca todos os jogadores sem filtro de liga
+
         const data = league === 'ALL'
           ? await api.getRankingsAll()
           : await api.getRankings(league);
-        // Limita aos 10 melhores
+
         setPlayers(data.slice(0, 10));
 
-        // Buscar última atualização
         const updateData = await api.getLastUpdateTime();
         setLastUpdate(updateData.formatted);
       } catch (error) {
-        console.error('Error loading rankings:', error);
+
       } finally {
         setLoading(false);
       }

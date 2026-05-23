@@ -128,27 +128,21 @@ const createTables = async () => {
 
   try {
     await pool.query(createTeamsTable);
-    console.log('Teams table created successfully');
-    
+
     await pool.query(createPlayersTable);
-    console.log('Players table created successfully');
-    
+
     await pool.query(createChampionStatsTable);
-    console.log('Champion stats table created successfully');
-    
+
     await pool.query(createMatchesTable);
-    console.log('Matches table created successfully');
-    
+
     await pool.query(createUserPreferencesTable);
-    console.log('User preferences table created successfully');
-    
+
     await pool.query(createPushSubscriptionsTable);
-    console.log('Push subscriptions table created successfully');
-    
+
     await pool.query(createNotificationsTable);
-    console.log('Notifications table created successfully');
+
   } catch (error) {
-    console.error('Error creating tables:', error);
+
     throw error;
   }
 };

@@ -10,16 +10,13 @@ router.get('/players', getPlayers);
 router.get('/players/:league', getPlayers);
 router.get('/player/:id', getPlayerById);
 
-// Rota para estatísticas de campeões (será populada quando os links forem fornecidos)
 router.get('/champions', getChampionStats);
 
-// Novas rotas para dados dinâmicos da Home
 router.get('/stats/total-players', getTotalPlayersCount);
 router.get('/stats/last-update', getLastUpdateTime);
 
 module.exports = router;
 
-// Helper function to format last update time
 function formatLastUpdate(dateString) {
   const date = new Date(dateString);
   const now = new Date();

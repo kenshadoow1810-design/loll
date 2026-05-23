@@ -23,7 +23,7 @@ export function Teams() {
         }
         setTeams(data);
       } catch (error) {
-        console.error('Error loading teams:', error);
+
         setTeams([]);
       } finally {
         setLoading(false);
@@ -42,7 +42,7 @@ export function Teams() {
           </span>
         </h1>
 
-        {/* Filtros de Liga */}
+        {}
         <div className="mb-8 flex flex-wrap gap-2">
           {leagues.map(league => (
             <button
@@ -59,7 +59,7 @@ export function Teams() {
           ))}
         </div>
 
-        {/* Grid de Times */}
+        {}
         {loading ? (
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
             {[...Array(8)].map((_, i) => (

@@ -58,7 +58,7 @@ export function ScheduleCarousel() {
 
       setMatches(upcomingMatches.slice(0, 10));
     } catch (error) {
-      console.error('Erro ao buscar partidas:', error);
+
       setMatches([]);
     } finally {
       setLoading(false);

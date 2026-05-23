@@ -12,11 +12,11 @@ export function TopChampionsChart() {
   useEffect(() => {
     const loadChampionStats = async () => {
       try {
-        // LINK_DO_CAMPION_AQUI - Dados serão populados quando os links dos campeões forem fornecidos
+
         const data = await api.getChampionStats();
         setChampionStats(data);
       } catch (error) {
-        console.error('Error loading champion stats:', error);
+
       } finally {
         setLoading(false);
       }
@@ -34,7 +34,7 @@ export function TopChampionsChart() {
     );
   }
   
-  // Count champion games by role
+
   const champStats = {};
   championStats.forEach(champ => {
     if (!champStats[champ.championName]) {
@@ -44,7 +44,6 @@ export function TopChampionsChart() {
     champStats[champ.championName].wins += champ.wins;
   });
 
-  // Sort by games and take top 10
   const topChamps = Object.entries(champStats)
     .sort((a, b) => b[1].games - a[1].games)
     .slice(0, 10);
@@ -114,7 +113,7 @@ export function TopKDAChart() {
         const data = await api.getTopPlayers(5);
         setTopPlayers(data);
       } catch (error) {
-        console.error('Error loading top players:', error);
+
       } finally {
         setLoading(false);
       }

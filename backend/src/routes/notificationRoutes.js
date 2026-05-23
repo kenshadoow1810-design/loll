@@ -2,13 +2,8 @@ const express = require('express');
 const router = express.Router();
 const { saveSubscription, checkAndSendMatchNotifications, getVapidPublicKey } = require('../services/notificationService');
 
-// Token de autenticação para o endpoint de check-matches (usado pelo GitHub Actions)
 const NOTIFICATION_API_TOKEN = process.env.NOTIFICATION_API_TOKEN;
 
-/**
- * GET /api/notifications/vapid-public-key
- * Retorna a chave pública VAPID para o frontend configurar o push
- */
 router.get('/notifications/vapid-public-key', (req, res) => {
   const publicKey = getVapidPublicKey();
   
@@ -21,10 +16,6 @@ router.get('/notifications/vapid-public-key', (req, res) => {
   res.json({ publicKey });
 });
 
-/**
- * POST /api/notifications/subscribe
- * Salva uma nova subscrição de push notification com preferências opcionais
- */
 router.post('/notifications/subscribe', async (req, res) => {
   try {
     const subscription = req.body.subscription || req.body;
@@ -35,10 +26,7 @@ router.post('/notifications/subscribe', async (req, res) => {
         error: 'Subscrição inválida. Endpoint é obrigatório.' 
       });
     }
-    
-    console.log('Recebendo subscrição:', subscription.endpoint);
-    console.log('Preferências do usuário:', userPreferences);
-    
+
     const result = await saveSubscription(subscription, userPreferences);
     
     res.json({ 
@@ -47,7 +35,7 @@ router.post('/notifications/subscribe', async (req, res) => {
       id: result?.id
     });
   } catch (error) {
-    console.error('Erro ao salvar subscrição:', error);
+
     res.status(500).json({ 
       error: 'Erro ao salvar subscrição',
       details: error.message 
@@ -55,31 +43,23 @@ router.post('/notifications/subscribe', async (req, res) => {
   }
 });
 
-/**
- * POST /api/notifications/check-matches
- * Endpoint manual para verificar e enviar notificações de partidas
- * (Será chamado pelo GitHub Actions cron)
- * Protegido por token de autenticação
- */
 router.post('/notifications/check-matches', async (req, res) => {
   try {
-    // Verificar autenticação via token
+
     const authHeader = req.headers.authorization;
     const token = authHeader && authHeader.startsWith('Bearer ') 
       ? authHeader.split(' ')[1] 
       : null;
     
     if (!token || token !== NOTIFICATION_API_TOKEN) {
-      console.warn('Tentativa de acesso não autorizado ao endpoint check-matches');
+
       return res.status(401).json({ 
         error: 'Não autorizado. Token de autenticação necessário.' 
       });
     }
     
     const minutesBefore = parseInt(req.query.minutes) || 15;
-    
-    console.log(`[API] Iniciando verificação de partidas (${minutesBefore} min)...`);
-    
+
     const result = await checkAndSendMatchNotifications(minutesBefore);
     
     res.json({ 
@@ -88,7 +68,7 @@ router.post('/notifications/check-matches', async (req, res) => {
       notificationsSent: result.sent
     });
   } catch (error) {
-    console.error('[API] Erro na verificação de partidas:', error);
+
     res.status(500).json({ 
       error: 'Erro ao verificar partidas',
       details: error.message 
@@ -96,10 +76,6 @@ router.post('/notifications/check-matches', async (req, res) => {
   }
 });
 
-/**
- * GET /api/notifications/stats
- * Retorna estatísticas de notificações
- */
 router.get('/notifications/stats', async (req, res) => {
   try {
     const pool = require('../config/database');
@@ -122,7 +98,7 @@ router.get('/notifications/stats', async (req, res) => {
       }, {})
     });
   } catch (error) {
-    console.error('Erro ao buscar estatísticas:', error);
+
     res.status(500).json({ 
       error: 'Erro ao buscar estatísticas',
       details: error.message 

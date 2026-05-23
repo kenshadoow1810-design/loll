@@ -18,7 +18,7 @@ const getTeams = async (req, res) => {
     const result = await pool.query(query, values);
     res.json(result.rows);
   } catch (error) {
-    console.error('Erro ao buscar times:', error);
+
     res.status(500).json({ error: 'Erro interno do servidor' });
   }
 };
@@ -27,7 +27,7 @@ const getTeamById = async (req, res) => {
   try {
     const { id } = req.params;
     
-    // Buscar informações do time
+
     const teamQuery = 'SELECT * FROM teams WHERE id = $1';
     const teamResult = await pool.query(teamQuery, [id]);
     
@@ -37,7 +37,7 @@ const getTeamById = async (req, res) => {
     
     const team = teamResult.rows[0];
     
-    // Buscar jogadores do time
+
     const playersQuery = `
       SELECT * FROM players 
       WHERE team_name = $1 
@@ -53,7 +53,7 @@ const getTeamById = async (req, res) => {
     `;
     const playersResult = await pool.query(playersQuery, [team.name]);
     
-    // Transformar dados dos jogadores
+
     const players = playersResult.rows.map(player => ({
       id: player.id.toString(),
       name: player.name,
@@ -86,7 +86,7 @@ const getTeamById = async (req, res) => {
     
     res.json(teamData);
   } catch (error) {
-    console.error('Erro ao buscar time:', error);
+
     res.status(500).json({ error: 'Erro interno do servidor' });
   }
 };
@@ -116,7 +116,7 @@ const getPlayers = async (req, res) => {
     
     const result = await pool.query(query, values);
     
-    // Transformar dados do banco para o formato esperado pelo frontend
+
     const players = result.rows.map(player => ({
       id: player.id.toString(),
       name: player.name,
@@ -137,7 +137,7 @@ const getPlayers = async (req, res) => {
     
     res.json(players);
   } catch (error) {
-    console.error('Erro ao buscar jogadores:', error);
+
     res.status(500).json({ error: 'Erro interno do servidor' });
   }
 };
@@ -174,7 +174,7 @@ const getPlayerById = async (req, res) => {
     
     res.json(playerData);
   } catch (error) {
-    console.error('Erro ao buscar jogador:', error);
+
     res.status(500).json({ error: 'Erro interno do servidor' });
   }
 };
@@ -203,7 +203,7 @@ const getChampionStats = async (req, res) => {
       
       const result = await pool.query(query, values);
     
-    // Transformar dados para incluir cálculos derivados
+
     const champions = result.rows.map(champ => ({
       id: champ.id.toString(),
       championName: champ.champion_name,
@@ -225,7 +225,7 @@ const getChampionStats = async (req, res) => {
     
     res.json(champions);
   } catch (error) {
-    console.error('Erro ao buscar estatísticas de campeões:', error);
+
     res.status(500).json({ error: 'Erro interno do servidor' });
   }
 };
@@ -237,14 +237,14 @@ const getTotalPlayersCount = async (req, res) => {
     const count = parseInt(result.rows[0].total) || 0;
     res.json({ total: count });
   } catch (error) {
-    console.error('Erro ao contar jogadores:', error);
+
     res.status(500).json({ error: 'Erro interno do servidor' });
   }
 };
 
 const getLastUpdateTime = async (req, res) => {
   try {
-    // Buscar o horário da última atualização de partidas ou jogadores
+
     const query = `
       SELECT 
         MAX(updated_at) as last_update 
@@ -262,14 +262,13 @@ const getLastUpdateTime = async (req, res) => {
       formatted: lastUpdate ? formatLastUpdate(lastUpdate) : 'Agora'
     });
   } catch (error) {
-    console.error('Erro ao buscar último update:', error);
+
     res.status(500).json({ error: 'Erro interno do servidor' });
   }
 };
 
 module.exports = { getTeams, getTeamById, getPlayers, getPlayerById, getChampionStats, getTotalPlayersCount, getLastUpdateTime };
 
-// Helper functions
 function formatLastUpdate(dateString) {
   const date = new Date(dateString);
   const now = new Date();

@@ -19,7 +19,7 @@ export function Compare() {
         const data = await api.getAllPlayers();
         setAllPlayers(data);
       } catch (error) {
-        console.error('Error loading players:', error);
+
       } finally {
         setLoading(false);
       }
@@ -109,7 +109,7 @@ export function Compare() {
           </span>
         </h1>
 
-        {/* Selectors */}
+        {}
         <div className="grid md:grid-cols-2 gap-6 mb-8">
           <div>
             <label className="block text-sm text-gray-400 mb-2">{t('player1')}</label>
@@ -141,14 +141,14 @@ export function Compare() {
 
         {player1 && player2 && (
           <>
-            {/* Radar Chart */}
+            {}
             <div className="bg-dark-100 border border-gray-700/30 rounded-2xl p-6 mb-8 h-96">
               <Radar data={radarData} options={radarOptions} />
             </div>
 
-            {/* Stats Comparison Cards */}
+            {}
             <div className="grid md:grid-cols-3 gap-6">
-              {/* Player 1 Card */}
+              {}
               <div className="bg-gradient-to-br from-gold-600/10 to-dark-100 border border-gold-600/30 rounded-2xl p-6">
                 <div className="flex items-center gap-4 mb-6">
                   {player1.image_url ? (
@@ -176,14 +176,14 @@ export function Compare() {
                 </div>
               </div>
 
-              {/* VS Badge */}
+              {}
               <div className="flex items-center justify-center">
                 <div className="w-16 h-16 rounded-full bg-dark-200 border border-gray-700/30 flex items-center justify-center">
                   <span className="font-display font-black text-2xl text-gray-500">VS</span>
                 </div>
               </div>
 
-              {/* Player 2 Card */}
+              {}
               <div className="bg-gradient-to-br from-accent-blue/10 to-dark-100 border border-accent-blue/30 rounded-2xl p-6">
                 <div className="flex items-center gap-4 mb-6">
                   {player2.image_url ? (

@@ -24,7 +24,7 @@ export function PlayerDetail() {
 
         setPlayer(playerData);
       } catch (error) {
-        console.error('Error loading player:', error);
+
         navigate('/players');
       } finally {
         setLoading(false);
@@ -46,13 +46,11 @@ export function PlayerDetail() {
 
   if (!player) return null;
 
-  // Calcular wins e losses baseado no winrate e games
   const wins = Math.round((player.wr / 100) * player.games);
   const losses = player.games - wins;
 
   const wrColor = player.wr >= 60 ? 'text-green-400' : player.wr >= 50 ? 'text-yellow-400' : 'text-red-400';
 
-  // Preparar dados para o gráfico de radar
   const radarData = [
     { stat: 'KDA', value: Math.min(player.kda, 10), fullMark: 10 },
     { stat: 'WR', value: player.wr / 10, fullMark: 10 },
@@ -63,7 +61,7 @@ export function PlayerDetail() {
   return (
     <div className="pt-24 pb-12 min-h-screen animate-fadeIn">
       <div className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8">
-        {/* Player Header */}
+        {}
         <div className="bg-dark-100 border border-gray-700/30 rounded-2xl overflow-hidden">
           <div className="relative p-6 pb-4 border-b border-gray-700/30">
             <button
@@ -75,7 +73,7 @@ export function PlayerDetail() {
               </svg>
             </button>
 
-            {/* Player Image - Left Side, Larger */}
+            {}
             <div className="flex flex-col md:flex-row items-start gap-6">
               <div className="flex-shrink-0">
                 <img
@@ -113,7 +111,7 @@ export function PlayerDetail() {
           </div>
 
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6 p-6">
-            {/* Stats Grid */}
+            {}
             <div className="space-y-4">
               <h3 className="font-display font-bold text-lg text-white mb-4">{t('mainStats')}</h3>
               <div className="grid grid-cols-2 gap-4">
@@ -142,7 +140,7 @@ export function PlayerDetail() {
                 </div>
               </div>
 
-              {/* Wins e Losses */}
+              {}
               <div className="grid grid-cols-2 gap-4">
                 <div className="bg-green-900/20 border border-green-700/30 rounded-xl p-4 text-center">
                   <div className="text-2xl font-display font-bold text-green-400">{wins}</div>
@@ -155,7 +153,7 @@ export function PlayerDetail() {
               </div>
             </div>
 
-            {/* Gráfico de Radar */}
+            {}
             <div className="bg-dark-200 rounded-xl p-4">
               <h3 className="font-display font-bold text-lg text-white mb-4 text-center">{t('performanceRadar')}</h3>
               <div className="h-64">
@@ -177,7 +175,7 @@ export function PlayerDetail() {
             </div>
           </div>
 
-          {/* Message about champions data */}
+          {}
           <div className="px-6 pb-6">
             <div className="bg-dark-200 rounded-xl p-6 text-center">
               <p className="text-gray-400">{t('championsDataSoon')}</p>

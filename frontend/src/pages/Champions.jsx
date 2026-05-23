@@ -8,12 +8,10 @@ const Champions = () => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
 
-  // Filtros
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedRole, setSelectedRole] = useState('ALL');
   const [selectedLeague, setSelectedLeague] = useState('GLOBAL');
 
-  // Ordenação
   const [sortConfig, setSortConfig] = useState({ key: 'games_played', direction: 'desc' });
   const { t } = useLanguage();
 
@@ -36,7 +34,7 @@ const Champions = () => {
       setError(null);
     } catch (err) {
       setError('Erro ao carregar dados dos campeões. Certifique-se de que a pipeline foi executada.');
-      console.error('Erro:', err);
+
     } finally {
       setLoading(false);
     }
@@ -45,30 +43,25 @@ const Champions = () => {
   const applyFiltersAndSort = () => {
     let result = [...champions];
 
-    // Filtro por nome
     if (searchTerm) {
       result = result.filter(champ =>
         champ.champion_name.toLowerCase().includes(searchTerm.toLowerCase())
       );
     }
 
-    // Filtro por role
     if (selectedRole !== 'ALL') {
       result = result.filter(champ => champ.role === selectedRole);
     }
 
-    // Filtro por liga
     if (selectedLeague !== 'GLOBAL') {
       result = result.filter(champ => champ.league === selectedLeague);
     }
 
-    // Ordenação
     if (sortConfig.key) {
       result.sort((a, b) => {
         let aValue = a[sortConfig.key];
         let bValue = b[sortConfig.key];
 
-        // Calcular métricas derivadas se necessário
         if (sortConfig.key === 'win_percentage') {
           aValue = a.win_percentage || 0;
           bValue = b.win_percentage || 0;
@@ -111,13 +104,12 @@ const Champions = () => {
     return numValue.toFixed(1);
   };
 
-
   const getChampionIcon = (championName, iconUrl) => {
-    // Usar apenas icon_url do banco de dados
+
     if (iconUrl && iconUrl.trim() !== '') {
       return iconUrl;
     }
-    // Fallback para imagem genérica se não tiver icon_url
+
     return 'https://ddragon.leagueoflegends.com/cdn/14.1.1/img/champion/Aatrox.png';
   };
 

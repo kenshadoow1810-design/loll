@@ -34,7 +34,7 @@ export function Navbar() {
       setSearchResults(results);
       setShowDropdown(true);
     } catch (error) {
-      console.error('Search error:', error);
+
     }
   };
 
@@ -50,7 +50,7 @@ export function Navbar() {
         setShowDropdown(false);
       }
     } catch (error) {
-      console.error('Search error:', error);
+
     }
   };
 

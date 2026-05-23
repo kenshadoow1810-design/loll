@@ -9,7 +9,6 @@ export function usePushNotifications() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
 
-  // Verificar se o navegador suporta notificações push
   useEffect(() => {
     const checkSupport = async () => {
       if (!('serviceWorker' in navigator) || !('PushManager' in window)) {
@@ -21,14 +20,12 @@ export function usePushNotifications() {
 
       setIsSupported(true);
 
-      // Verificar permissão atual
       setPermission(Notification.permission);
 
-      // Carregar subscrição existente com timeout para evitar loading infinito
       try {
         await loadSubscription();
       } catch (err) {
-        console.error('Erro ao carregar subscrição:', err);
+
         setError(err.message);
         setLoading(false);
       }
@@ -37,10 +34,9 @@ export function usePushNotifications() {
     checkSupport();
   }, []);
 
-  // Carregar subscrição do Service Worker
   const loadSubscription = async () => {
     try {
-      // Adicionar timeout para evitar loading infinito
+
       const registration = await Promise.race([
         navigator.serviceWorker.ready,
         new Promise((_, reject) => 
@@ -52,32 +48,30 @@ export function usePushNotifications() {
       
       if (existingSubscription) {
         setSubscription(existingSubscription);
-        console.log('Subscrição encontrada:', existingSubscription.endpoint);
+
       }
     } catch (err) {
-      console.error('Erro ao carregar subscrição:', err);
+
       setError(err.message);
     } finally {
       setLoading(false);
     }
   };
 
-  // Registrar Service Worker
   const registerServiceWorker = useCallback(async () => {
     if (!isSupported) return null;
 
     try {
       const registration = await navigator.serviceWorker.register('/sw.js');
-      console.log('Service Worker registrado:', registration.scope);
+
       return registration;
     } catch (err) {
-      console.error('Erro ao registrar Service Worker:', err);
+
       setError(err.message);
       throw err;
     }
   }, [isSupported]);
 
-  // Solicitar permissão de notificação
   const requestPermission = useCallback(async () => {
     if (!('Notification' in window)) {
       setError('Notificações não são suportadas neste navegador');
@@ -95,7 +89,6 @@ export function usePushNotifications() {
     return true;
   }, []);
 
-  // Obter chave pública VAPID do backend
   const getVapidPublicKey = useCallback(async () => {
     try {
       const response = await fetch(`${API_BASE_URL}/api/notifications/vapid-public-key`);
@@ -107,36 +100,33 @@ export function usePushNotifications() {
       const data = await response.json();
       return data.publicKey;
     } catch (err) {
-      console.error('Erro ao obter chave VAPID:', err);
+
       setError(err.message);
       throw err;
     }
   }, []);
 
-  // Assinar para receber notificações push
   const subscribeToPush = useCallback(async () => {
     if (!isSupported) {
       throw new Error('Push notifications não são suportadas');
     }
 
     try {
-      // 1. Registrar Service Worker
+
       const registration = await registerServiceWorker();
       
-      // 2. Solicitar permissão
+
       const hasPermission = await requestPermission();
       if (!hasPermission) {
         throw new Error('Permissão negada');
       }
 
-      // 3. Obter chave VAPID
       const vapidPublicKey = await getVapidPublicKey();
       
       if (!vapidPublicKey) {
         throw new Error('Chave VAPID não disponível');
       }
 
-      // 4. Subscrição no Push Manager
       const convertedKey = urlBase64ToUint8Array(vapidPublicKey);
       
       const newSubscription = await registration.pushManager.subscribe({
@@ -144,21 +134,17 @@ export function usePushNotifications() {
         applicationServerKey: convertedKey
       });
 
-      console.log('Nova subscrição criada:', newSubscription.endpoint);
-
-      // 5. Enviar subscrição para o backend
       await sendSubscriptionToBackend(newSubscription);
       
       setSubscription(newSubscription);
       return newSubscription;
     } catch (err) {
-      console.error('Erro ao subscrever para push:', err);
+
       setError(err.message);
       throw err;
     }
   }, [isSupported, registerServiceWorker, requestPermission, getVapidPublicKey]);
 
-  // Enviar subscrição para o backend
   const sendSubscriptionToBackend = async (subscriptionData) => {
     try {
       const response = await fetch(`${API_BASE_URL}/api/notifications/subscribe`, {
@@ -175,15 +161,14 @@ export function usePushNotifications() {
       }
 
       const result = await response.json();
-      console.log('Subscrição salva no backend:', result);
+
       return result;
     } catch (err) {
-      console.error('Erro ao enviar subscrição:', err);
+
       throw err;
     }
   };
 
-  // Cancelar subscrição
   const unsubscribe = useCallback(async () => {
     if (!subscription) return true;
 
@@ -192,18 +177,17 @@ export function usePushNotifications() {
       
       if (unsubscribed) {
         setSubscription(null);
-        console.log('Subscrição cancelada');
+
       }
       
       return unsubscribed;
     } catch (err) {
-      console.error('Erro ao cancelar subscrição:', err);
+
       setError(err.message);
       return false;
     }
   }, [subscription]);
 
-  // Testar notificação localmente
   const testLocalNotification = useCallback(() => {
     if (Notification.permission === 'granted') {
       new Notification('Teste de Notificação', {
@@ -229,7 +213,6 @@ export function usePushNotifications() {
   };
 }
 
-// Utilitário para converter chave VAPID de base64 para Uint8Array
 function urlBase64ToUint8Array(base64String) {
   const padding = '='.repeat((4 - (base64String.length % 4)) % 4);
   const base64 = (base64String + padding)
