@@ -1,6 +1,7 @@
 require('dotenv').config();
 const { Pool } = require('pg');
-const { scrapeAllChampions } = require('../services/scrapeService');
+// Ajuste o caminho conforme a estrutura real dos seus serviços
+const scrapingService = require('../services/scrapingService'); 
 
 const pool = new Pool({
   connectionString: process.env.DATABASE_URL,
@@ -13,7 +14,8 @@ async function initDatabase() {
   const client = await pool.connect();
 
   try {
-    // Criar tabelas se não existirem
+    // 1. Criar tabelas se não existirem
+    console.log('📦 Criando tabelas...');
     await client.query(`
       CREATE TABLE IF NOT EXISTS champions (
         id SERIAL PRIMARY KEY,
@@ -25,80 +27,116 @@ async function initDatabase() {
         updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
       );
 
-      CREATE TABLE IF NOT EXISTS matches (
-        id SERIAL PRIMARY KEY,
-        match_id VARCHAR(100) UNIQUE NOT NULL,
-        game_mode VARCHAR(50),
-        game_type VARCHAR(50),
-        map_id INTEGER,
-        game_duration INTEGER,
-        game_creation BIGINT,
-        queue_id INTEGER,
-        season_id INTEGER,
-        platform_id VARCHAR(10),
-        participants JSONB,
-        teams JSONB,
-        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
-      );
-
-      CREATE TABLE IF NOT EXISTS player_stats (
-        id SERIAL PRIMARY KEY,
-        summoner_name VARCHAR(100) NOT NULL,
-        summoner_id VARCHAR(100) UNIQUE,
-        account_id VARCHAR(100),
-        puuid VARCHAR(100) UNIQUE,
-        profile_icon_id INTEGER,
-        revision_date BIGINT,
-        summoner_level INTEGER,
-        tier VARCHAR(20),
-        rank VARCHAR(20),
-        league_points INTEGER,
-        wins INTEGER,
-        losses INTEGER,
-        hot_streak BOOLEAN,
-        veteran BOOLEAN,
-        fresh_blood BOOLEAN,
-        inactive BOOLEAN,
-        last_match_date TIMESTAMP,
+      CREATE TABLE IF NOT EXISTS teams (
+        id VARCHAR(100) PRIMARY KEY,
+        name VARCHAR(100) NOT NULL,
+        code VARCHAR(20),
+        logo_url TEXT,
+        home_ground VARCHAR(255),
         created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
         updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
       );
 
+      CREATE TABLE IF NOT EXISTS players (
+        id VARCHAR(100) PRIMARY KEY,
+        name VARCHAR(100) NOT NULL,
+        nickname VARCHAR(100),
+        image_url TEXT,
+        role VARCHAR(20),
+        team_id VARCHAR(100),
+        nationality VARCHAR(50),
+        birth_date DATE,
+        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+        updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+        FOREIGN KEY (team_id) REFERENCES teams(id) ON DELETE SET NULL
+      );
+
+      CREATE TABLE IF NOT EXISTS matches (
+        id VARCHAR(100) PRIMARY KEY,
+        date TIMESTAMP,
+        team1_id VARCHAR(100),
+        team2_id VARCHAR(100),
+        score1 INTEGER,
+        score2 INTEGER,
+        status VARCHAR(20),
+        week INTEGER,
+        split VARCHAR(20),
+        year INTEGER,
+        league VARCHAR(50),
+        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+        updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+        FOREIGN KEY (team1_id) REFERENCES teams(id),
+        FOREIGN KEY (team2_id) REFERENCES teams(id)
+      );
+
       CREATE INDEX IF NOT EXISTS idx_champions_name ON champions(name);
-      CREATE INDEX IF NOT EXISTS idx_matches_match_id ON matches(match_id);
-      CREATE INDEX IF NOT EXISTS idx_matches_game_creation ON matches(game_creation);
-      CREATE INDEX IF NOT EXISTS idx_player_stats_puuid ON player_stats(puuid);
-      CREATE INDEX IF NOT EXISTS idx_player_stats_summoner_name ON player_stats(summoner_name);
+      CREATE INDEX IF NOT EXISTS idx_teams_name ON teams(name);
+      CREATE INDEX IF NOT EXISTS idx_players_team ON players(team_id);
+      CREATE INDEX IF NOT EXISTS idx_matches_date ON matches(date);
     `);
 
-    console.log('✅ Tabelas criadas com sucesso!');
+    console.log('✅ Tabelas criadas/atualizadas com sucesso!');
 
-    // Executar scrape inicial
-    console.log('🚀 Iniciando scrape inicial...');
-    const result = await scrapeAllChampions();
-
-    if (result.success) {
-      console.log(`✅ Scrape concluído! ${result.data.champions.length} campeões processados.`);
-    } else {
-      console.error('❌ Erro no scrape:', result.error);
+    // 2. Executar Scrapes em sequência
+    
+    // A. Scrapar Campeões (Dados estáticos)
+    console.log('\n🚀 [1/4] Iniciando scrape de Campeões...');
+    try {
+      if (scrapingService.scrapeChampions) {
+        await scrapingService.scrapeChampions();
+        console.log('✅ Campeões processados.');
+      } else {
+        console.log('⚠️ Função scrapeChampions não encontrada no serviço.');
+      }
+    } catch (err) {
+      console.error('❌ Erro ao scrapear campeões:', err.message);
     }
 
+    // B. Scrapar Times (Necessário antes dos jogadores)
+    console.log('\n🚀 [2/4] Iniciando scrape de Times...');
+    try {
+      if (scrapingService.scrapeTeams) {
+        await scrapingService.scrapeTeams();
+        console.log('✅ Times processados.');
+      } else {
+        console.log('⚠️ Função scrapeTeams não encontrada no serviço.');
+      }
+    } catch (err) {
+      console.error('❌ Erro ao scrapear times:', err.message);
+    }
+
+    // C. Scrapar Jogadores (Depende dos times já estarem no banco)
+    console.log('\n🚀 [3/4] Iniciando scrape de Jogadores...');
+    try {
+      if (scrapingService.scrapePlayers) {
+        await scrapingService.scrapePlayers();
+        console.log('✅ Jogadores processados.');
+      } else {
+        console.log('⚠️ Função scrapePlayers não encontrada no serviço.');
+      }
+    } catch (err) {
+      console.error('❌ Erro ao scrapear jogadores:', err.message);
+    }
+
+    console.log('\n🎉 Inicialização e Seed concluídos!');
+
   } catch (error) {
-    console.error('❌ Erro ao inicializar banco:', error);
+    console.error('💥 Erro crítico na inicialização:', error);
     throw error;
   } finally {
     client.release();
     await pool.end();
+    console.log('🔌 Conexão com banco fechada.');
   }
 }
 
 // Executar
 initDatabase()
   .then(() => {
-    console.log('🎉 Inicialização concluída com sucesso!');
+    console.log('🏁 Script finalizado com sucesso!');
     process.exit(0);
   })
   .catch((err) => {
-    console.error('💥 Falha na inicialização:', err);
+    console.error('💥 Falha na execução:', err);
     process.exit(1);
   });
