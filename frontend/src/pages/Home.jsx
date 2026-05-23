@@ -8,7 +8,7 @@ export function Home() {
   const [currentLeague, setCurrentLeague] = useState('ALL');
   const [totalPlayers, setTotalPlayers] = useState(null);
   const [lastUpdate, setLastUpdate] = useState(null);
-  const { t, language } = useLanguage();
+  const { t } = useLanguage();
 
   useEffect(() => {
 
@@ -23,7 +23,7 @@ export function Home() {
 
     const fetchLastUpdate = async () => {
       try {
-        const data = await api.getLastUpdateTime(language);
+        const data = await api.getLastUpdateTime();
         setLastUpdate(data.formatted);
       } catch (error) {
 
@@ -32,12 +32,12 @@ export function Home() {
 
     fetchTotalPlayers();
     fetchLastUpdate();
-  }, [language]);
+  }, []);
 
   return (
     <div className="animate-fadeIn">
       {}
-      <section className="bg-hero py-16 lg:py-12" style={{ 
+      <section className="bg-hero py-16 lg:py-12" style={{
         background: 'radial-gradient(ellipse at 50% 0%, rgba(240,192,64,0.08) 0%, transparent 60%), radial-gradient(ellipse at 80% 50%, rgba(10,200,185,0.05) 0%, transparent 50%), #0A0B0E'
       }}>
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
