@@ -1,20 +1,22 @@
 import { Link, useLocation } from 'react-router-dom';
-import { Search, Trophy } from 'lucide-react';
+import { Search, Trophy, Globe } from 'lucide-react';
 import { useState } from 'react';
 import { api } from '../../services/api';
+import { useLanguage } from '../../context/LanguageContext';
 
 export function Navbar() {
   const location = useLocation();
   const [searchQuery, setSearchQuery] = useState('');
   const [searchResults, setSearchResults] = useState([]);
   const [showDropdown, setShowDropdown] = useState(false);
+  const { t, toggleLanguage, language } = useLanguage();
   
   const navLinks = [
-    { path: '/', label: 'Rankings' },
-    { path: '/players', label: 'Jogadores' },
-    { path: '/teams', label: 'Times' },
-    { path: '/champions', label: 'Campeões' },
-    { path: '/compare', label: 'Comparar' },
+    { path: '/', label: t('rankings') },
+    { path: '/players', label: t('players') },
+    { path: '/teams', label: t('teams') },
+    { path: '/champions', label: t('champions') },
+    { path: '/compare', label: t('compare') },
   ];
 
   const handleSearch = async (query) => {
@@ -82,10 +84,20 @@ export function Navbar() {
             ))}
           </div>
 
-          <div className="relative">
+          <div className="flex items-center gap-3">
+            <button
+              onClick={toggleLanguage}
+              className="flex items-center gap-2 px-3 py-2 rounded-lg bg-dark-100 border border-gray-700/50 text-gray-300 hover:text-gold-400 hover:border-gold-600/40 transition-all"
+              title={language === 'en' ? 'Switch to Portuguese' : 'Mudar para Inglês'}
+            >
+              <Globe className="w-4 h-4" />
+              <span className="text-xs font-semibold">{language === 'en' ? 'PT' : 'EN'}</span>
+            </button>
+          
+            <div className="relative">
             <input
               type="text"
-              placeholder="Buscar jogador..."
+              placeholder={t('searchPlayer')}
               value={searchQuery}
               onChange={(e) => handleSearch(e.target.value)}
               onKeyDown={(e) => e.key === 'Enter' && executeSearch()}
@@ -96,7 +108,7 @@ export function Navbar() {
             {showDropdown && (
               <div className="absolute top-full mt-2 left-0 right-0 bg-dark-100 border border-gray-700/50 rounded-xl shadow-2xl overflow-hidden max-h-80 overflow-y-auto">
                 {searchResults.length === 0 ? (
-                  <div className="p-4 text-sm text-gray-500 text-center">Nenhum jogador encontrado</div>
+                  <div className="p-4 text-sm text-gray-500 text-center">{t('noPlayerFound')}</div>
                 ) : (
                   searchResults.map(player => (
                     <Link
@@ -127,6 +139,7 @@ export function Navbar() {
               </div>
             )}
           </div>
+          </div>
         </div>
       </div>
     </nav>
@@ -134,6 +147,8 @@ export function Navbar() {
 }
 
 export function Footer() {
+  const { t } = useLanguage();
+  
   return (
     <footer className="border-t border-gray-700/30 bg-dark-200 mt-16">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-10">
@@ -148,8 +163,8 @@ export function Footer() {
             </span>
           </div>
           <div className="text-center text-xs text-gray-600">
-            Dados não oficiais. Riot Games não endossa este site.<br />
-            © 2026 ProStats LoL. Todos os direitos reservados.
+            {t('unofficialData')}<br />
+            © 2026 ProStats LoL. {t('allRightsReserved')}
           </div>
           <div className="flex gap-4">
             <a href="#" className="p-2 rounded-lg bg-dark-100 text-gray-500 hover:text-gold-400 transition-all">
