@@ -128,7 +128,7 @@ function normalizeChampionData(rawChampion) {
   };
 
   const championKey = findKey(['champion', 'champ', 'name']);
-  const roleKey = findKey(['role', 'lane', 'position']);
+  const roleKey = findKey(['role', 'lane', 'pos']);
   const gamesKey = findKey(['games', 'gp', 'matches', 'games played']);
   const winPercentageKey = findKey(['win %', 'win%', 'win percentage', 'w%']);
   const banPercentageKey = findKey(['ban %', 'ban%', 'ban percentage', 'bans %', 'bans%']);
