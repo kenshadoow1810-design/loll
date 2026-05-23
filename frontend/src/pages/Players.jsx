@@ -62,12 +62,12 @@ export function Players() {
                 <div className="flex items-center gap-4">
                   {player.image_url ? (
                     <img
-                      src={player.image_url}
+                      src={player.image_url|| 'https://static.lolesports.com/players/1675150271520_placeholder.png'} 
                       alt={player.name}
                       className="w-16 h-16 rounded-xl object-cover"
                     />
                   ) : (
-                    <div className="w-16 h-16 rounded-xl bg-gradient-to-br from-gold-400/20 to-gold-600/20 flex items-center justify-center text-2xl">
+                    <div className="w-16 h-16 rounded-xl flex items-center justify-center text-2xl">
                       🎮
                     </div>
                   )}
