@@ -1,16 +1,52 @@
 ```
-# Dependencies
-node_modules/
-
-# Logs and temp files
-*.log
-*.tmp
-
 # Environment
 .env
 .env.local
 .env.*
 
-# Editors
+# Dependencies
+node_modules/
+venv/
+.venv/
+__pycache__/
+*.egg-info/
+dist/
+build/
+target/
+.gradle/
+
+# Logs and temporary files
+*.log
+*.tmp
+*.swp
+*.swo
+
+# OS generated files
+.DS_Store
+Thumbs.db
+
+# IDE specific
 .vscode/
+.idea/
+*.swp
+*.swo
+
+# Python specific
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+.Python
+*.so
+
+# Coverage reports
+coverage/
+htmlcov/
+.coverage
+
+# MyPy cache
+.mypy_cache/
+# Pytest cache
+.pytest_cache/
+
 ```

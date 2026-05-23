@@ -8,15 +8,6 @@ on:
     - cron: '*/30 * * * *'
   workflow_dispatch:
     # Permitir execução manual para testes
-    inputs:
-      job:
-        description: 'Job para executar (update-images)'
-        required: false
-        default: ''
-        type: choice
-        options:
-          - ''
-          - update-images
 
 jobs:
   extract-data:
@@ -68,32 +59,5 @@ jobs:
             exit 0
           else
             echo "❌ Erro na sincronização (HTTP $HTTP_CODE)"
-            exit 1
-          fi
-
-  update-images-manual:
-    runs-on: ubuntu-latest
-    if: github.event_name == 'workflow_dispatch' && inputs.job == 'update-images'
-    
-    steps:
-      - name: Update Images and Real Names (Manual Only)
-        run: |
-          echo "Atualizando imagens e nomes reais (execução manual)..."
-          
-          # Fazer requisição POST para o endpoint de atualização de imagens
-          RESPONSE=$(curl -s -w "\n%{http_code}" -X POST "${{ secrets.API_BASE_URL }}/api/update-images" \
-            -H "Content-Type: application/json")
-          
-          HTTP_CODE=$(echo "$RESPONSE" | tail -n1)
-          BODY=$(echo "$RESPONSE" | head -n-1)
-          
-          echo "Resposta da API:"
-          echo "$BODY"
-          
-          if [ "$HTTP_CODE" -eq 200 ]; then
-            echo "✅ Atualização de imagens concluída com sucesso!"
-            exit 0
-          else
-            echo "❌ Erro na atualização de imagens (HTTP $HTTP_CODE)"
             exit 1
           fi
