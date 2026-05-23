@@ -26,8 +26,8 @@ async function saveChampionStatsToDB(champions) {
       champ.role,
       champ.league || 'GLOBAL',
       champ.games_played || 0,
-      parseFloat(((champ.wins / gamesPlayed) * 100).toFixed(2)) || 0,
-      parseFloat(((champ.bans / gamesPlayed) * 100).toFixed(2)) || 0,
+      champ.win_percentage || 0,
+      champ.ban_percentage || 0,
       champ.kills || 0,
       champ.deaths || 0,
       champ.assists || 0,
@@ -50,8 +50,8 @@ function normalizePlayerData(rawPlayer) {
   const teamKey = findKey(['team', 'org']);
   const positionKey = findKey(['pos', 'position', 'role', 'lane']);
   const gamesKey = findKey(['games', 'gp', 'matches']);
-  const winsKey = findKey(['wins', 'w', 'w%']);
-  const winPercentageKey = findKey(['win %', 'win%', 'win percentage', 'win_pct']);
+  const winsKey = findKey(['w ', ' w', 'wins ', ' wins']);
+  const winPercentageKey = findKey(['win %', 'win%', 'win percentage', 'win_pct', 'w%']);
   const kdaKey = findKey(['kda']);
   const kpKey = findKey(['kp', 'kill participation']);
   const goldKey = findKey(['gold per 10', 'gold@10', 'gpm']);
@@ -59,14 +59,16 @@ function normalizePlayerData(rawPlayer) {
   const cspmKey = findKey(['cspm', 'cs per minute', 'cs/min']);
 
   const gamesPlayed = parseInt(rawPlayer[gamesKey]) || 0;
-  const wins = parseInt(rawPlayer[winsKey]) || 0;
+  let wins = 0;
+  let winPercentage = 0;
 
-  let winPercentage;
   if (winPercentageKey && rawPlayer[winPercentageKey]) {
     const rawWinPct = rawPlayer[winPercentageKey];
-    winPercentage = parseFloat(rawWinPct.replace('%', '')) || (gamesPlayed > 0 ? parseFloat(((wins / gamesPlayed) * 100).toFixed(2)) : 0);
-  } else {
-    winPercentage = gamesPlayed > 0 ? parseFloat(((wins / gamesPlayed) * 100).toFixed(2)) : 0;
+    winPercentage = parseFloat(rawWinPct.replace('%', '')) || 0;
+  }
+
+  if (winsKey && rawPlayer[winsKey]) {
+    wins = parseInt(rawPlayer[winsKey]) || 0;
   }
 
   return {
@@ -128,18 +130,32 @@ function normalizeChampionData(rawChampion) {
   const championKey = findKey(['champion', 'champ', 'name']);
   const roleKey = findKey(['role', 'lane', 'position']);
   const gamesKey = findKey(['games', 'gp', 'matches', 'games played']);
-  const winsKey = findKey(['wins', 'w', 'win']);
+  const winPercentageKey = findKey(['win %', 'win%', 'win percentage', 'w%']);
+  const banPercentageKey = findKey(['ban %', 'ban%', 'ban percentage', 'bans %', 'bans%']);
   const bansKey = findKey(['bans']);
   const killsKey = findKey(['kills', 'k']);
   const deathsKey = findKey(['deaths', 'd']);
   const assistsKey = findKey(['assists', 'a']);
   const iconKey = findKey(['icon', 'image', 'url']);
 
+  let winPercentage = 0;
+  if (winPercentageKey && rawChampion[winPercentageKey]) {
+    const rawWinPct = rawChampion[winPercentageKey];
+    winPercentage = parseFloat(rawWinPct.replace('%', '')) || 0;
+  }
+
+  let banPercentage = 0;
+  if (banPercentageKey && rawChampion[banPercentageKey]) {
+    const rawBanPct = rawChampion[banPercentageKey];
+    banPercentage = parseFloat(rawBanPct.replace('%', '')) || 0;
+  }
+
   return {
     champion_name: rawChampion[championKey] || 'Unknown',
     role: (rawChampion[roleKey] || 'UNKNOWN').trim().toUpperCase(),
     games_played: parseInt(rawChampion[gamesKey]) || 0,
-    wins: parseInt(rawChampion[winsKey]) || 0,
+    win_percentage: winPercentage,
+    ban_percentage: banPercentage,
     bans: parseInt(rawChampion[bansKey]) || 0,
     kills: parseInt(rawChampion[killsKey]) || 0,
     deaths: parseInt(rawChampion[deathsKey]) || 0,
