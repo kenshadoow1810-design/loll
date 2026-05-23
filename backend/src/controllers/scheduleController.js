@@ -1,4 +1,5 @@
 const { fetchAndStoreMatches, getUpcomingMatches } = require('../services/matchScheduleService');
+const { updateImagesAndRealNames } = require('../scripts/updateImages');
 
 exports.getSchedule = async (req, res) => {
   try {
@@ -69,5 +70,17 @@ exports.syncMatches = async (req, res) => {
   } catch (error) {
 
     res.status(500).json({ error: 'Erro ao sincronizar partidas' });
+  }
+};
+
+exports.updateImages = async (req, res) => {
+  try {
+    await updateImagesAndRealNames();
+    res.json({ 
+      message: 'Atualização de imagens e nomes reais concluída com sucesso' 
+    });
+  } catch (error) {
+    console.error('Erro ao atualizar imagens:', error);
+    res.status(500).json({ error: 'Erro ao atualizar imagens' });
   }
 };

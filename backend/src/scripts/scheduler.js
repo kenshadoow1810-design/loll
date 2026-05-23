@@ -1,39 +1,43 @@
-const cron = require('node-cron');
+// Scheduler removido - agora usando GitHub Actions para agendamento
+// As funções são executadas via endpoints API chamados pelo GitHub Actions
+
 const { runExtraction } = require('../services/dataPipeline');
 const { updateImagesAndRealNames } = require('./updateImages');
 const { fetchAndStoreMatches } = require('../services/matchScheduleService');
 
-function startScheduler() {
-
-  cron.schedule('0 * * * *', async () => {
-
-    try {
-      await runExtraction();
-
-    } catch (error) {
-
-    }
-  });
-
-  cron.schedule('0 3 * * *', async () => {
-
-    try {
-      await updateImagesAndRealNames();
-
-    } catch (error) {
-
-    }
-  });
-
-  cron.schedule('*/30 * * * *', async () => {
-
-    try {
-      await fetchAndStoreMatches();
-
-    } catch (error) {
-
-    }
-  });
+// Funções exportadas para uso manual ou via API
+async function runExtractionManual() {
+  try {
+    await runExtraction();
+    console.log('Extração concluída com sucesso');
+  } catch (error) {
+    console.error('Erro na extração:', error);
+    throw error;
+  }
 }
 
-module.exports = { startScheduler };
+async function updateImagesManual() {
+  try {
+    await updateImagesAndRealNames();
+    console.log('Atualização de imagens concluída com sucesso');
+  } catch (error) {
+    console.error('Erro na atualização de imagens:', error);
+    throw error;
+  }
+}
+
+async function syncMatchesManual() {
+  try {
+    await fetchAndStoreMatches();
+    console.log('Sincronização de partidas concluída com sucesso');
+  } catch (error) {
+    console.error('Erro na sincronização de partidas:', error);
+    throw error;
+  }
+}
+
+module.exports = { 
+  runExtractionManual, 
+  updateImagesManual, 
+  syncMatchesManual 
+};
