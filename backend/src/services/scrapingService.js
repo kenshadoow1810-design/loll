@@ -64,6 +64,8 @@ async function downloadCSV(page, url, filename) {
       return links.find(link => link.textContent.trim() === 'Download This Table');
     }, { timeout: 15000 });
 
+    await new Promise(resolve => setTimeout(resolve, 5000));
+
     // Clicar no elemento encontrado
     await page.evaluate(() => {
       const links = Array.from(document.querySelectorAll('a'));
@@ -437,17 +439,17 @@ async function scrapeChampions() {
 // Função para buscar todas as imagens dos campeões da API do League of Legends
 async function fetchChampionImages() {
   try {
-    const response = await axios.get('https://ddragon.leagueoflegends.com/cdn/14.1.1/data/en_US/champion.json');
+    const response = await axios.get('https://ddragon.leagueoflegends.com/cdn/16.1.1/data/en_US/champion.json');
     const championData = response.data.data;
     
     const imageMap = {};
     for (const [key, champion] of Object.entries(championData)) {
-      imageMap[key.toUpperCase()] = `https://ddragon.leagueoflegends.com/cdn/14.1.1/img/champion/${key}.png`;
+      imageMap[key.toUpperCase()] = `https://ddragon.leagueoflegends.com/cdn/16.1.1/img/champion/${key}.png`;
       
       // Adicionar variações de nome
       const formattedName = formatChampionName(champion.name);
       if (formattedName !== key.toUpperCase()) {
-        imageMap[formattedName] = `https://ddragon.leagueoflegends.com/cdn/14.1.1/img/champion/${key}.png`;
+        imageMap[formattedName] = `https://ddragon.leagueoflegends.com/cdn/16.1.1/img/champion/${key}.png`;
       }
     }
     
