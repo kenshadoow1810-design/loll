@@ -19,7 +19,7 @@ export const api = {
   },
 
   getTotalPlayersCount: async () => {
-    const response = await fetch(`${API_BASE_URL}/stats/total-players`);
+    const response = await fetch(`${API_BASE_URL}/total-players`);
     if (!response.ok) {
       throw new Error('Failed to fetch total players count');
     }
@@ -27,7 +27,7 @@ export const api = {
   },
 
   getLastUpdateTime: async () => {
-    const response = await fetch(`${API_BASE_URL}/stats/last-update`);
+    const response = await fetch(`${API_BASE_URL}/last-update`);
     if (!response.ok) {
       throw new Error('Failed to fetch last update time');
     }
