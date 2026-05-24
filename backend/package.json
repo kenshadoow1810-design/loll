@@ -11,13 +11,13 @@
     "build:frontend": "cd ../frontend && npm install && npm run build",
     "start:prod": "node src/index.js",
     "init-db": "node src/services/dataPipeline.js"
-
   },
   "keywords": [],
   "author": "",
   "license": "ISC",
   "description": "",
   "dependencies": {
+    "@sparticuz/chromium": "^138.0.2",
     "axios": "^1.16.1",
     "cors": "^2.8.6",
     "csv-parser": "^3.2.1",
@@ -25,7 +25,6 @@
     "express": "^5.2.1",
     "node-fetch": "^3.3.2",
     "pg": "^8.21.0",
-    "@sparticuz/chromium": "^138.0.2",
     "puppeteer": "^24.0.0"
   },
   "devDependencies": {
