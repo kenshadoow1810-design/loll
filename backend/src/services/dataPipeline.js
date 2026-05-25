@@ -29,18 +29,6 @@
         console.log('\n🏆 Processando times...');
         const allTeams = [];
 
-        for (const file of teamFiles) {
-          const filePath = path.join(DOWNLOAD_DIR, file);
-          const teams = await parseCSV(filePath);
-
-          const leagueMatch = file.match(/_(lcs|lck|lec|lpl|cblol)_/i);
-          const league = leagueMatch ? leagueMatch[1].toUpperCase() : 'UNKNOWN';
-
-          teams.forEach(t => t.league = league);
-          allTeams.push(...teams);
-          console.log(`  ✅ ${file}: ${teams.length} times`);
-        }
-
         await saveTeamsToDB(allTeams);
         console.log(`✅ Total de times salvos: ${allTeams.length}`);
       }
@@ -51,19 +39,6 @@
         console.log('\n📊 Processando jogadores...');
         const allPlayers = [];
 
-        for (const file of playerFiles) {
-          const filePath = path.join(DOWNLOAD_DIR, file);
-          const players = await parseCSV(filePath);
-
-          // Detectar liga pelo nome do arquivo
-          const leagueMatch = file.match(/_(lcs|lck|lec|lpl|cblol)_/i);
-          const league = leagueMatch ? leagueMatch[1].toUpperCase() : 'UNKNOWN';
-
-          players.forEach(p => p.league = league);
-          allPlayers.push(...players);
-          console.log(`  ✅ ${file}: ${players.length} jogadores`);
-        }
-
         await savePlayersToDB(allPlayers);
         console.log(`✅ Total de jogadores salvos: ${allPlayers.length}`);
       }
@@ -73,18 +48,6 @@
       if (champFiles.length > 0) {
         console.log('\n⚔️ Processando campeões...');
         const allChampions = [];
-
-        for (const file of champFiles) {
-          const filePath = path.join(DOWNLOAD_DIR, file);
-          const champions = await parseCSV(filePath);
-
-          const leagueMatch = file.match(/_(lcs|lck|lec|lpl|cblol)_/i);
-          const league = leagueMatch ? leagueMatch[1].toUpperCase() : 'UNKNOWN';
-
-          champions.forEach(c => c.league = league);
-          allChampions.push(...champions);
-          console.log(`  ✅ ${file}: ${champions.length} campeões`);
-        }
 
         await saveChampionStatsToDB(allChampions);
         console.log(`✅ Total de campeões salvos: ${allChampions.length}`);
