@@ -1,59 +1,47 @@
 name: Data Pipeline - Extração Manual de CSVs
 
 on:
+  # 1. Permite rodar manualmente pelo botão no GitHub Actions
   workflow_dispatch:
-    # Permitir execução manual quando novos CSVs forem upados para a pasta downloads
+    inputs:
+      log_level:
+        description: 'Nível de log (opcional)'
+        required: false
+        default: 'info'
+
+  # 2. Roda automaticamente se alguém fizer push de CSVs na pasta downloads
   push:
+    branches:
+      - main  
     paths:
-      - 'backend/downloads/**/*.csv'
-      - '.github/workflows/data-pipeline-manual.yml'
+      - 'backend/downloads/*.csv'
 
 jobs:
-  extract-data-from-csv:
+  extract-data:
     runs-on: ubuntu-latest
 
     steps:
-      - name: Checkout do repositório
-        uses: actions/checkout@v4
+      - name: Checkout do código
+        uses: actions/checkout@v3
 
-      - name: Setup Node.js
-        uses: actions/setup-node@v4
+      - name: Configurar Node.js
+        uses: actions/setup-node@v3
         with:
-          node-version: '18'
-          cache: 'npm'
-          cache-dependency-path: backend/package-lock.json
+          node-version: '18' # Ou a versão que você usa no projeto
 
       - name: Instalar dependências
-        working-directory: ./backend
-        run: npm ci
+        run: |
+          cd backend
+          npm install
 
-      - name: Executar Data Pipeline (CSV -> Banco de Dados)
-        working-directory: ./backend
+      - name: Executar Extração dos CSVs
         env:
           DATABASE_URL: ${{ secrets.DATABASE_URL }}
         run: |
-          echo "Iniciando extração de dados dos CSVs na pasta downloads..."
-
-          # Listar arquivos CSV disponíveis
-          if [ -d "downloads" ] && [ "$(ls -A downloads/*.csv 2>/dev/null)" ]; then
-            echo "✅ Arquivos CSV encontrados:"
-            ls -la downloads/*.csv
-          else
-            echo "❌ Nenhum arquivo CSV encontrado na pasta downloads/"
-            echo "Por favor, faça upload dos arquivos CSV manualmente."
-            exit 1
-          fi
-
-          # Executar script de extração
-          node -e "
-            const { runExtractionFromCSV } = require('./src/services/dataPipeline');
-            runExtractionFromCSV()
-              .then(() => {
-                console.log('✅ Pipeline de extração concluída com sucesso!');
-                process.exit(0);
-              })
-              .catch((error) => {
-                console.error('❌ Erro na extração:', error);
-                process.exit(1);
-              });
-          "
+          cd backend
+          # Garante que a pasta existe para não dar erro de leitura vazia
+          mkdir -p downloads 
+          node scripts/runExtractionFromCSV.js 
+          # OBS: Certifique-se de que o caminho do script abaixo bate com onde você salvou a lógica de ler CSVs
+          # Se a lógica estiver dentro do dataPipeline.js exportada como runExtractionFromCSV, crie um script curto ou chame direto:
+          # node -e "require('./dataPipeline').runExtractionFromCSV()"
