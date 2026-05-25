@@ -6,7 +6,7 @@ require('dotenv').config();
 const { createTables } = require('./config/schema');
 const statsRoutes = require('./routes/statsRoutes');
 const scheduleRoutes = require('./routes/scheduleRoutes');
-const { runExtraction } = require('./services/dataPipeline');
+const { runExtractionFromCSV } = require('./services/dataPipeline');
 
 const app = express();
 const PORT = process.env.PORT;
@@ -39,7 +39,7 @@ app.get('/health', (req, res) => {
 
 app.post('/api/extract', async (req, res) => {
   try {
-    await runExtraction();
+    await runExtractionFromCSV();
     res.json({ message: 'Extração concluída com sucesso' });
   } catch (error) {
     res.status(500).json({ error: 'Erro ao executar extração' });
