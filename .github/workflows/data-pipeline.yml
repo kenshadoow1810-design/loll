@@ -2,40 +2,10 @@ name: Data Pipeline - Extração e Sincronização
 
 on:
   schedule:
-    # Executar extração de dados a cada hora
-    - cron: '0 * * * *'
-    # Executar sincronização de partidas a cada 30 minutos
     - cron: '*/30 * * * *'
   workflow_dispatch:
-    # Permitir execução manual para testes
 
 jobs:
-  extract-data:
-    runs-on: ubuntu-latest
-    
-    steps:
-      - name: Trigger Data Extraction
-        run: |
-          echo "Iniciando pipeline de extração de dados..."
-          
-          # Fazer requisição POST para o endpoint de extração
-          RESPONSE=$(curl -s -w "\n%{http_code}" -X POST "${{ secrets.API_BASE_URL }}/api/extract" \
-            -H "Content-Type: application/json")
-          
-          HTTP_CODE=$(echo "$RESPONSE" | tail -n1)
-          BODY=$(echo "$RESPONSE" | head -n-1)
-          
-          echo "Resposta da API:"
-          echo "$BODY"
-          
-          if [ "$HTTP_CODE" -eq 200 ]; then
-            echo "✅ Pipeline de extração concluída com sucesso!"
-            exit 0
-          else
-            echo "❌ Erro na extração (HTTP $HTTP_CODE)"
-            exit 1
-          fi
-
   sync-matches:
     runs-on: ubuntu-latest
     
