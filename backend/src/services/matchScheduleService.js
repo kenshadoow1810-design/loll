@@ -4,7 +4,7 @@ const pool = require('../config/database');
 const PANDASCORE_API_KEY = process.env.PANDASCORE_API_KEY || 'your_api_key_here';
 const PANDASCORE_BASE_URL = 'https://api.pandascore.co';
 
-const LEAGUE_IDS = [293, 4198, 4197, 4407, 302];
+const LEAGUE_IDS = [293, 4198, 4197, 294, 302];
 
 const fetchAndStoreMatches = async () => {
   try {
