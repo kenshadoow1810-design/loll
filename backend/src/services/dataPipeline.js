@@ -23,6 +23,28 @@
       console.log(`📁 Arquivos CSV encontrados: ${csvFiles.length}`);
       csvFiles.forEach(f => console.log(`  - ${f}`));
 
+      // Processar times
+      const teamFiles = csvFiles.filter(f => f.toLowerCase().includes('team'));
+      if (teamFiles.length > 0) {
+        console.log('\n🏆 Processando times...');
+        const allTeams = [];
+
+        for (const file of teamFiles) {
+          const filePath = path.join(DOWNLOAD_DIR, file);
+          const teams = await parseCSV(filePath);
+
+          const leagueMatch = file.match(/_(lcs|lck|lec|lpl|cblol)_/i);
+          const league = leagueMatch ? leagueMatch[1].toUpperCase() : 'UNKNOWN';
+
+          teams.forEach(t => t.league = league);
+          allTeams.push(...teams);
+          console.log(`  ✅ ${file}: ${teams.length} times`);
+        }
+
+        await saveTeamsToDB(allTeams);
+        console.log(`✅ Total de times salvos: ${allTeams.length}`);
+      }
+
       // Processar jogadores
       const playerFiles = csvFiles.filter(f => f.toLowerCase().includes('player'));
       if (playerFiles.length > 0) {
@@ -44,28 +66,6 @@
 
         await savePlayersToDB(allPlayers);
         console.log(`✅ Total de jogadores salvos: ${allPlayers.length}`);
-      }
-
-      // Processar times
-      const teamFiles = csvFiles.filter(f => f.toLowerCase().includes('team'));
-      if (teamFiles.length > 0) {
-        console.log('\n🏆 Processando times...');
-        const allTeams = [];
-
-        for (const file of teamFiles) {
-          const filePath = path.join(DOWNLOAD_DIR, file);
-          const teams = await parseCSV(filePath);
-
-          const leagueMatch = file.match(/_(lcs|lck|lec|lpl|cblol)_/i);
-          const league = leagueMatch ? leagueMatch[1].toUpperCase() : 'UNKNOWN';
-
-          teams.forEach(t => t.league = league);
-          allTeams.push(...teams);
-          console.log(`  ✅ ${file}: ${teams.length} times`);
-        }
-
-        await saveTeamsToDB(allTeams);
-        console.log(`✅ Total de times salvos: ${allTeams.length}`);
       }
 
       // Processar campeões
