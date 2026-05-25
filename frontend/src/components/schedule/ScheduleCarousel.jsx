@@ -26,7 +26,7 @@ export function ScheduleCarousel() {
   const fetchMatches = async () => {
     try {
       const API_URL = import.meta.env.VITE_API_URL;
-      const response = await fetch(`${API_URL}/schedule`, {
+      const response = await fetch(`${API_URL}/api/schedule`, {
         method: 'GET',
         headers: {
           'Accept': 'application/json',
