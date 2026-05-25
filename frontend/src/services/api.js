@@ -3,7 +3,7 @@ const API_BASE_URL =   import.meta.env.VITE_API_URL;
 export const api = {
 
   getRankings: async (league) => {
-    const response = await fetch(`${API_BASE_URL}/players/${league}`);
+    const response = await fetch(`${API_BASE_URL}/api/players/${league}`);
     if (!response.ok) {
       throw new Error('Failed to fetch rankings');
     }
@@ -11,7 +11,7 @@ export const api = {
   },
 
   getRankingsAll: async () => {
-    const response = await fetch(`${API_BASE_URL}/players`);
+    const response = await fetch(`${API_BASE_URL}/api/players`);
     if (!response.ok) {
       throw new Error('Failed to fetch all rankings');
     }
@@ -19,7 +19,7 @@ export const api = {
   },
 
   getTotalPlayersCount: async () => {
-    const response = await fetch(`${API_BASE_URL}/total-players`);
+    const response = await fetch(`${API_BASE_URL}/api/total-players`);
     if (!response.ok) {
       throw new Error('Failed to fetch total players count');
     }
@@ -27,7 +27,7 @@ export const api = {
   },
 
   getLastUpdateTime: async () => {
-    const response = await fetch(`${API_BASE_URL}/last-update`);
+    const response = await fetch(`${API_BASE_URL}/api/last-update`);
     if (!response.ok) {
       throw new Error('Failed to fetch last update time');
     }
@@ -35,7 +35,7 @@ export const api = {
   },
 
   getPlayer: async (playerId, league) => {
-    const response = await fetch(`${API_BASE_URL}/player/${playerId}`);
+    const response = await fetch(`${API_BASE_URL}/api/player/${playerId}`);
     if (!response.ok) {
       throw new Error('Failed to fetch player');
     }
@@ -43,7 +43,7 @@ export const api = {
   },
 
   getAllPlayers: async () => {
-    const response = await fetch(`${API_BASE_URL}/players`);
+    const response = await fetch(`${API_BASE_URL}/api/players`);
     if (!response.ok) {
       throw new Error('Failed to fetch all players');
     }
@@ -56,7 +56,7 @@ export const api = {
   },
 
   getTeams: async () => {
-    const response = await fetch(`${API_BASE_URL}/teams`);
+    const response = await fetch(`${API_BASE_URL}/api/teams`);
     if (!response.ok) {
       throw new Error('Failed to fetch teams');
     }
@@ -64,7 +64,7 @@ export const api = {
   },
 
   getTeamsByLeague: async (league) => {
-    const response = await fetch(`${API_BASE_URL}/teams/${league}`);
+    const response = await fetch(`${API_BASE_URL}/api/teams/${league}`);
     if (!response.ok) {
       throw new Error('Failed to fetch teams by league');
     }
@@ -72,7 +72,7 @@ export const api = {
   },
 
   getTeamById: async (id) => {
-    const response = await fetch(`${API_BASE_URL}/team/${id}`);
+    const response = await fetch(`${API_BASE_URL}/api/team/${id}`);
     if (!response.ok) {
       throw new Error('Failed to fetch team');
     }
@@ -80,7 +80,7 @@ export const api = {
   },
 
   getChampionStats: async () => {
-    const response = await fetch(`${API_BASE_URL}/champions`);
+    const response = await fetch(`${API_BASE_URL}/api/champions`);
     if (!response.ok) {
       throw new Error('Failed to fetch champion stats');
     }
