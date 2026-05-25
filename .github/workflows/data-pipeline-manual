@@ -37,7 +37,7 @@ jobs:
           # Listar arquivos CSV disponíveis
           if [ -d "downloads" ] && [ "$(ls -A downloads/*.csv 2>/dev/null)" ]; then
             echo "✅ Arquivos CSV encontrados:"
-            ls -la downloads/.csv
+            ls -la downloads/*.csv
           else
             echo "❌ Nenhum arquivo CSV encontrado na pasta downloads/"
             echo "Por favor, faça upload dos arquivos CSV manualmente."
