@@ -1,0 +1,59 @@
+name: Data Pipeline - Extração Manual de CSVs
+
+on:
+  workflow_dispatch:
+    # Permitir execução manual quando novos CSVs forem upados para a pasta downloads
+  push:
+    paths:
+      - 'backend/downloads/**/*.csv'
+      - '.github/workflows/data-pipeline-manual.yml'
+
+jobs:
+  extract-data-from-csv:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout do repositório
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '18'
+          cache: 'npm'
+          cache-dependency-path: backend/package-lock.json
+
+      - name: Instalar dependências
+        working-directory: ./backend
+        run: npm ci
+
+      - name: Executar Data Pipeline (CSV -> Banco de Dados)
+        working-directory: ./backend
+        env:
+          DATABASE_URL: ${{ secrets.DATABASE_URL }}
+        run: |
+          echo "Iniciando extração de dados dos CSVs na pasta downloads..."
+
+          # Listar arquivos CSV disponíveis
+          if [ -d "downloads" ] && [ "$(ls -A downloads/*.csv 2>/dev/null)" ]; then
+            echo "✅ Arquivos CSV encontrados:"
+            ls -la downloads/*.csv
+          else
+            echo "❌ Nenhum arquivo CSV encontrado na pasta downloads/"
+            echo "Por favor, faça upload dos arquivos CSV manualmente."
+            exit 1
+          fi
+
+          # Executar script de extração
+          node -e "
+            const { runExtractionFromCSV } = require('./src/services/dataPipeline');
+            runExtractionFromCSV()
+              .then(() => {
+                console.log('✅ Pipeline de extração concluída com sucesso!');
+                process.exit(0);
+              })
+              .catch((error) => {
+                console.error('❌ Erro na extração:', error);
+                process.exit(1);
+              });
+          "
