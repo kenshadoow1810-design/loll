@@ -263,27 +263,32 @@ function extractLeagueFromFilename(filename) {
 }
 
 async function runExtractionFromCSV() {
+  // Garante que o caminho seja absoluto baseado na localização deste arquivo
+  // Se este arquivo está em backend/dataPipeline.js, isso apontará para backend/downloads
   const downloadsDir = path.join(__dirname, 'downloads');
   
+  console.log(`🔍 Procurando arquivos em: ${downloadsDir}`);
+
   if (!fs.existsSync(downloadsDir)) {
-    console.log('Pasta downloads não encontrada.');
+    console.error('❌ ERRO: Pasta downloads não encontrada em:', downloadsDir);
+    console.log('💡 Dica: Certifique-se de que os arquivos CSV estão em backend/downloads/');
     return;
   }
 
   const files = fs.readdirSync(downloadsDir).filter(f => f.endsWith('.csv'));
   
   if (files.length === 0) {
-    console.log('Nenhum arquivo CSV encontrado na pasta downloads.');
+    console.log('⚠️ Nenhum arquivo CSV encontrado na pasta downloads.');
     return;
   }
 
-  console.log(`Encontrados ${files.length} arquivos para processar.`);
+  console.log(`📂 Encontrados ${files.length} arquivos para processar.`);
 
   for (const file of files) {
     const filePath = path.join(downloadsDir, file);
     const league = extractLeagueFromFilename(file);
     
-    console.log(`\nProcessando arquivo: ${file} | Liga detectada: ${league}`);
+    console.log(`\n🔄 Processando: ${file} | Liga detectada: ${league}`);
 
     const results = [];
     
@@ -308,18 +313,12 @@ async function runExtractionFromCSV() {
         await saveChampionStatsToDB(results, league);
         console.log(`✅ ${results.length} campeões salvos (${league}).`);
       } else {
-        console.log(`⚠️ Arquivo ${file} ignorado (nome não reconhecido).`);
+        console.log(`⚠️ Arquivo ${file} ignorado (nome não reconhecido). Use 'players', 'teams' ou 'champions' no nome.`);
       }
     } catch (err) {
-      console.error(`Erro ao processar ${file}:`, err.message);
+      console.error(`❌ Erro ao salvar dados de ${file}:`, err.message);
     }
   }
-}
-
-// Mantém a função original caso seja chamada de outro lugar, mas agora ela deve usar a lógica de CSV se preferir
-async function runExtraction() {
-  console.log("Atenção: runExtraction() foi substituído pela lógica baseada em CSV.");
-  return runExtractionFromCSV();
 }
 
 module.exports = { 
