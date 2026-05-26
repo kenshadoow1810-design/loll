@@ -1,43 +1,35 @@
-const pool = require('../config/database'); // Ajuste este require se mover o arquivo
+const pool = require('../config/database');
 const fs = require('fs');
 const path = require('path');
 const csv = require('csv-parser');
 
-// CORREÇÃO DO CAMINHO:
-// __dirname é o diretório deste arquivo (ex: .../backend/src/services)
-// Precisamos subir até a raiz do backend e depois entrar em downloads
-// Se este arquivo estiver em src/services, usamos ../../downloads
-// Se estiver na raiz do backend, usamos ../downloads
-// Vamos fazer uma lógica robusta para encontrar a pasta 'backend'
-
-function getDownloadsPath() {
-  let currentDir = __dirname;
-  
-  // Sobe na árvore de diretórios até encontrar uma pasta que contenha 'backend' 
-  // ou até chegar na raiz do projeto
-  while (path.basename(currentDir) !== 'backend' && currentDir !== path.dirname(currentDir)) {
-    currentDir = path.dirname(currentDir);
+// Função auxiliar para encontrar a pasta backend/downloads independentemente de onde o script roda
+function getDownloadsDir() {
+  // Tenta caminho relativo direto (se rodar na raiz do backend)
+  let directPath = path.join(__dirname, '../../downloads');
+  if (fs.existsSync(directPath)) {
+    return directPath;
   }
 
-  // Se encontramos a pasta backend, entramos em downloads. Se não, assume relativo.
-  if (path.basename(currentDir) === 'backend') {
-    return path.join(currentDir, 'downloads');
+  // Tenta caminho alternativo (se rodar dentro de src/services)
+  let srcPath = path.join(__dirname, '../downloads');
+  if (fs.existsSync(srcPath)) {
+    return srcPath;
   }
-  
-  // Fallback: tenta relativo ao diretório atual (caso a estrutura mude)
-  return path.join(__dirname, '../../downloads'); 
+
+  // Fallback absoluto baseado na estrutura esperada
+  const rootPath = path.resolve(__dirname, '../../../downloads');
+  if (fs.existsSync(rootPath)) {
+    return rootPath;
+  }
+
+  throw new Error('Pasta downloads não encontrada em nenhum caminho esperado.');
 }
 
-const DOWNLOADS_DIR = getDownloadsPath();
-
-// Mapeamento de nomes de arquivos para funções de salvamento
 async function saveChampionStatsToDB(champions, leagueOverride) {
   for (const rawChamp of champions) {
     const champ = normalizeChampionData(rawChamp, leagueOverride);
     
-    // Aplica a liga extraída do nome do arquivo
-    const finalLeague = leagueOverride || champ.league || 'GLOBAL';
-
     const query = `
       INSERT INTO champion_stats (champion_name, role, league, games_played, win_percentage, ban_percentage, total_kills, total_deaths, total_assists, icon_url, updated_at)
       VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, NOW())
@@ -55,7 +47,7 @@ async function saveChampionStatsToDB(champions, leagueOverride) {
     const values = [
       champ.champion_name,
       champ.role,
-      finalLeague,
+      champ.league,
       champ.games_played || 0,
       champ.win_percentage || 0,
       champ.ban_percentage || 0,
@@ -112,7 +104,7 @@ function normalizePlayerData(rawPlayer, leagueOverride) {
     dpm: parseFloat(rawPlayer[dpmKey]) || 0,
     cspm: parseFloat(rawPlayer[cspmKey]) || 0,
     win_percentage: winPercentage,
-    league: leagueOverride, // Usa a liga extraída do arquivo
+    league: leagueOverride, 
     real_name: rawPlayer.real_name || null,
     image_url: rawPlayer.image_url || null
   };
@@ -135,7 +127,7 @@ function normalizeTeamData(rawTeam, leagueOverride) {
     games_played: parseInt(rawTeam[gamesKey]) || 0,
     wins: parseInt(rawTeam[winsKey]) || 0,
     losses: parseInt(rawTeam[lossesKey]) || 0,
-    league: leagueOverride, // Usa a liga extraída do arquivo
+    league: leagueOverride, 
     logo_url: rawTeam.logo_url || null
   };
 }
@@ -189,7 +181,7 @@ function normalizeChampionData(rawChampion, leagueOverride) {
     deaths: parseInt(rawChampion[deathsKey]) || 0,
     assists: parseInt(rawChampion[assistsKey]) || 0,
     icon_url: rawChampion[iconKey] ? String(rawChampion[iconKey]).trim() : null,
-    league: leagueOverride // Usa a liga extraída do arquivo
+    league: leagueOverride 
   };
 }
 
@@ -267,50 +259,60 @@ async function saveTeamsToDB(teams, leagueOverride) {
 
 // Função auxiliar para extrair a liga do nome do arquivo
 function extractLeagueFromFilename(filename) {
-  const parts = filename.toLowerCase().split('_');
+  // Remove a extensão .csv (case insensitive)
+  const nameWithoutExt = filename.replace(/\.csv$/i, '');
   
-  // Ligas conhecidas
-  const knownLeagues = ['lcs', 'lec', 'lck', 'lpl', 'cblol', 'lco', 'lla', 'vcs', 'pcs', 'ljl', 'lcl', 'tur'];
+  // Divide por underscore ou ponto
+  // Ex: "players_lck" -> ["players", "lck"]
+  const parts = nameWithoutExt.split(/[_\.]/);
   
+  // Lista de ligas conhecidas para validação
+  const knownLeagues = ['lcs', 'lec', 'lck', 'lpl', 'cblol'];
+  
+  // Procura nas partes do nome algo que bata com uma liga conhecida
   for (const part of parts) {
-    if (knownLeagues.includes(part)) {
-      return part.toUpperCase();
+    const upperPart = part.toUpperCase();
+    if (knownLeagues.includes(part.toLowerCase())) {
+      return upperPart;
     }
   }
 
-  // Fallback: pega a segunda parte se existir (padrão tipo_LIGA.csv)
-  if (parts.length >= 2) {
-    return parts[1].toUpperCase().replace('.csv', '');
+  // Se não achar na lista, assume que a liga é a última parte do nome (padrão tipo_LIGA)
+  if (parts.length > 1) {
+    return parts[parts.length - 1].toUpperCase();
   }
 
   return 'GLOBAL';
 }
 
 async function runExtractionFromCSV() {
-  console.log(`🔍 Procurando CSVs em: ${DOWNLOADS_DIR}`);
-
-  if (!fs.existsSync(DOWNLOADS_DIR)) {
-    console.error(`❌ Erro: Pasta downloads não encontrada em ${DOWNLOADS_DIR}`);
-    // Cria a pasta se não existir para evitar erros futuros, mas avisa
-    fs.mkdirSync(DOWNLOADS_DIR, { recursive: true });
-    console.log(`📁 Pasta criada em ${DOWNLOADS_DIR}`);
+  let downloadsDir;
+  try {
+    downloadsDir = getDownloadsDir();
+  } catch (error) {
+    console.error(error.message);
+    return;
+  }
+  
+  if (!fs.existsSync(downloadsDir)) {
+    console.log('Pasta downloads não encontrada.');
     return;
   }
 
-  const files = fs.readdirSync(DOWNLOADS_DIR).filter(f => f.endsWith('.csv'));
+  const files = fs.readdirSync(downloadsDir).filter(f => f.endsWith('.csv'));
   
   if (files.length === 0) {
-    console.log('⚠️ Nenhum arquivo CSV encontrado na pasta downloads.');
+    console.log('Nenhum arquivo CSV encontrado na pasta downloads.');
     return;
   }
 
-  console.log(`📂 Encontrados ${files.length} arquivos para processar.`);
+  console.log(`Encontrados ${files.length} arquivos para processar em: ${downloadsDir}`);
 
   for (const file of files) {
-    const filePath = path.join(DOWNLOADS_DIR, file);
+    const filePath = path.join(downloadsDir, file);
     const league = extractLeagueFromFilename(file);
     
-    console.log(`\n🔄 Processando arquivo: ${file} | Liga detectada: ${league}`);
+    console.log(`\nProcessando arquivo: ${file} | Liga detectada: ${league}`);
 
     const results = [];
     
@@ -335,19 +337,16 @@ async function runExtractionFromCSV() {
         await saveChampionStatsToDB(results, league);
         console.log(`✅ ${results.length} campeões salvos (${league}).`);
       } else {
-        console.log(`⚠️ Arquivo ${file} ignorado (nome não reconhecido como player, team ou champ).`);
+        console.log(`⚠️ Arquivo ${file} ignorado (nome não reconhecido).`);
       }
     } catch (err) {
-      console.error(`❌ Erro ao processar ${file}:`, err.message);
-      throw err; // Propaga o erro para parar o pipeline se falhar
+      console.error(`Erro ao processar ${file}:`, err.message);
     }
   }
-  
-  console.log('\n🎉 Pipeline de extração concluído!');
 }
 
 async function runExtraction() {
-  console.log("⚡ Iniciando extração (modo CSV)...");
+  console.log("Executando extração via CSV...");
   return runExtractionFromCSV();
 }
 
