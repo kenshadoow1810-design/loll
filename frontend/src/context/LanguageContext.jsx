@@ -78,7 +78,7 @@ const translations = {
     watch: 'Watch',
     bestOf: 'BO',
 
-    unofficialData: 'Unofficial data. Riot Games does not endorse this site.',
+    unofficialData: 'Riot Games does not endorse this site.',
     allRightsReserved: 'All rights reserved.',
 
     close: 'Close',
@@ -195,7 +195,7 @@ const translations = {
     watch: 'Assistir',
     bestOf: 'MD',
 
-    unofficialData: 'Dados não oficiais. Riot Games não endossa este site.',
+    unofficialData: 'Riot Games não endossa este site.',
     allRightsReserved: 'Todos os direitos reservados.',
 
     close: 'Fechar',
