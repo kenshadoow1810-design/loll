@@ -59,7 +59,6 @@ export function Navbar() {
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex items-center justify-between h-16">
           <Link to="/" className="flex items-center gap-3 cursor-pointer">
-            <div className="w-9 h-9 rounded-lg bg-gradient-to-br from-gold-400 to-gold-600 flex items-center justify-center">
               <Trophy className="w-5 h-5 text-dark-300" />
             </div>
             <span className="font-display font-bold text-lg tracking-wider">
@@ -154,7 +153,6 @@ export function Footer() {
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-10">
         <div className="flex flex-col md:flex-row items-center justify-between gap-6">
           <div className="flex items-center gap-3">
-            <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-gold-400 to-gold-600 flex items-center justify-center">
               <Trophy className="w-4 h-4 text-dark-300" />
             </div>
             <span className="font-display font-bold text-sm tracking-wider">
