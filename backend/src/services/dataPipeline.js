@@ -1,14 +1,41 @@
-const pool = require('../config/database');
+const pool = require('../config/database'); // Ajuste este require se mover o arquivo
 const fs = require('fs');
 const path = require('path');
 const csv = require('csv-parser');
 
+// CORREÇÃO DO CAMINHO:
+// __dirname é o diretório deste arquivo (ex: .../backend/src/services)
+// Precisamos subir até a raiz do backend e depois entrar em downloads
+// Se este arquivo estiver em src/services, usamos ../../downloads
+// Se estiver na raiz do backend, usamos ../downloads
+// Vamos fazer uma lógica robusta para encontrar a pasta 'backend'
+
+function getDownloadsPath() {
+  let currentDir = __dirname;
+  
+  // Sobe na árvore de diretórios até encontrar uma pasta que contenha 'backend' 
+  // ou até chegar na raiz do projeto
+  while (path.basename(currentDir) !== 'backend' && currentDir !== path.dirname(currentDir)) {
+    currentDir = path.dirname(currentDir);
+  }
+
+  // Se encontramos a pasta backend, entramos em downloads. Se não, assume relativo.
+  if (path.basename(currentDir) === 'backend') {
+    return path.join(currentDir, 'downloads');
+  }
+  
+  // Fallback: tenta relativo ao diretório atual (caso a estrutura mude)
+  return path.join(__dirname, '../../downloads'); 
+}
+
+const DOWNLOADS_DIR = getDownloadsPath();
+
 // Mapeamento de nomes de arquivos para funções de salvamento
 async function saveChampionStatsToDB(champions, leagueOverride) {
   for (const rawChamp of champions) {
-    const champ = normalizeChampionData(rawChamp);
+    const champ = normalizeChampionData(rawChamp, leagueOverride);
     
-    // Aplica a liga extraída do nome do arquivo se não existir ou for inválida
+    // Aplica a liga extraída do nome do arquivo
     const finalLeague = leagueOverride || champ.league || 'GLOBAL';
 
     const query = `
@@ -25,7 +52,6 @@ async function saveChampionStatsToDB(champions, leagueOverride) {
         updated_at = NOW()
     `;
 
-    const gamesPlayed = champ.games_played || 1;
     const values = [
       champ.champion_name,
       champ.role,
@@ -241,11 +267,9 @@ async function saveTeamsToDB(teams, leagueOverride) {
 
 // Função auxiliar para extrair a liga do nome do arquivo
 function extractLeagueFromFilename(filename) {
-  // Espera formato: tipo_LIGA.csv ou tipo_LIGA_algo.csv
-  // Ex: players_lcs.csv -> LCS, teams_cblol_2024.csv -> CBLol
   const parts = filename.toLowerCase().split('_');
   
-  // Tenta encontrar uma parte que pareça uma liga conhecida
+  // Ligas conhecidas
   const knownLeagues = ['lcs', 'lec', 'lck', 'lpl', 'cblol', 'lco', 'lla', 'vcs', 'pcs', 'ljl', 'lcl', 'tur'];
   
   for (const part of parts) {
@@ -254,7 +278,7 @@ function extractLeagueFromFilename(filename) {
     }
   }
 
-  // Se não achar conhecido, tenta pegar a segunda parte se existir (padrão tipo_LIGA)
+  // Fallback: pega a segunda parte se existir (padrão tipo_LIGA.csv)
   if (parts.length >= 2) {
     return parts[1].toUpperCase().replace('.csv', '');
   }
@@ -263,19 +287,17 @@ function extractLeagueFromFilename(filename) {
 }
 
 async function runExtractionFromCSV() {
-  // Garante que o caminho seja absoluto baseado na localização deste arquivo
-  // Se este arquivo está em backend/dataPipeline.js, isso apontará para backend/downloads
-  const downloadsDir = path.join(__dirname, 'downloads');
-  
-  console.log(`🔍 Procurando arquivos em: ${downloadsDir}`);
+  console.log(`🔍 Procurando CSVs em: ${DOWNLOADS_DIR}`);
 
-  if (!fs.existsSync(downloadsDir)) {
-    console.error('❌ ERRO: Pasta downloads não encontrada em:', downloadsDir);
-    console.log('💡 Dica: Certifique-se de que os arquivos CSV estão em backend/downloads/');
+  if (!fs.existsSync(DOWNLOADS_DIR)) {
+    console.error(`❌ Erro: Pasta downloads não encontrada em ${DOWNLOADS_DIR}`);
+    // Cria a pasta se não existir para evitar erros futuros, mas avisa
+    fs.mkdirSync(DOWNLOADS_DIR, { recursive: true });
+    console.log(`📁 Pasta criada em ${DOWNLOADS_DIR}`);
     return;
   }
 
-  const files = fs.readdirSync(downloadsDir).filter(f => f.endsWith('.csv'));
+  const files = fs.readdirSync(DOWNLOADS_DIR).filter(f => f.endsWith('.csv'));
   
   if (files.length === 0) {
     console.log('⚠️ Nenhum arquivo CSV encontrado na pasta downloads.');
@@ -285,10 +307,10 @@ async function runExtractionFromCSV() {
   console.log(`📂 Encontrados ${files.length} arquivos para processar.`);
 
   for (const file of files) {
-    const filePath = path.join(downloadsDir, file);
+    const filePath = path.join(DOWNLOADS_DIR, file);
     const league = extractLeagueFromFilename(file);
     
-    console.log(`\n🔄 Processando: ${file} | Liga detectada: ${league}`);
+    console.log(`\n🔄 Processando arquivo: ${file} | Liga detectada: ${league}`);
 
     const results = [];
     
@@ -313,15 +335,24 @@ async function runExtractionFromCSV() {
         await saveChampionStatsToDB(results, league);
         console.log(`✅ ${results.length} campeões salvos (${league}).`);
       } else {
-        console.log(`⚠️ Arquivo ${file} ignorado (nome não reconhecido). Use 'players', 'teams' ou 'champions' no nome.`);
+        console.log(`⚠️ Arquivo ${file} ignorado (nome não reconhecido como player, team ou champ).`);
       }
     } catch (err) {
-      console.error(`❌ Erro ao salvar dados de ${file}:`, err.message);
+      console.error(`❌ Erro ao processar ${file}:`, err.message);
+      throw err; // Propaga o erro para parar o pipeline se falhar
     }
   }
+  
+  console.log('\n🎉 Pipeline de extração concluído!');
+}
+
+async function runExtraction() {
+  console.log("⚡ Iniciando extração (modo CSV)...");
+  return runExtractionFromCSV();
 }
 
 module.exports = { 
+  runExtraction, 
   runExtractionFromCSV,
   savePlayersToDB, 
   saveTeamsToDB, 
