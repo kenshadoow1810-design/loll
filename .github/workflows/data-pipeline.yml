@@ -15,7 +15,7 @@ jobs:
           echo "Sincronizando agenda de partidas..."
           
           # Fazer requisição POST para o endpoint de sincronização
-          RESPONSE=$(curl -s -w "\n%{http_code}" -X POST "${{ secrets.API_BASE_URL }}/api/schedule/sync" \
+          RESPONSE=$(curl -s -w "\n%{http_code}" -X POST "${{ secrets.API_BASE_URL }}api/schedule/sync" \
             -H "Content-Type: application/json")
           
           HTTP_CODE=$(echo "$RESPONSE" | tail -n1)
