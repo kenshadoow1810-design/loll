@@ -68,7 +68,7 @@ export function Players() {
                     />
                   ) : (
                     <div className="w-16 h-16 rounded-xl flex items-center justify-center text-2xl">
-                      🎮
+                      
                     </div>
                   )}
                   <div className="flex-1">
