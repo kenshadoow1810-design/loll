@@ -1,5 +1,4 @@
-name: Data Pipeline - Extração Manual e Ícones
-
+name: Data Pipeline 
 on:
   workflow_dispatch: # Isso cria o botão manual
     inputs:
