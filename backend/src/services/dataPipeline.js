@@ -322,7 +322,6 @@ async function runExtractionFromCSV() {
 }
 
 module.exports = { 
-  runExtraction, 
   runExtractionFromCSV,
   savePlayersToDB, 
   saveTeamsToDB, 
