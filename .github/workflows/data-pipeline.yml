@@ -37,11 +37,11 @@ jobs:
         run: |
           cd backend
           mkdir -p downloads
-          node services/dataPipeline.js
+          node src/services/dataPipeline.js
 
       - name: 2. Atualizar Ícones dos Campeões
         env:
           DATABASE_URL: ${{ secrets.DATABASE_URL }}
         run: |
           cd backend
-          node services/updateChampionIcons.js
+          node src/services/updateChampionIcons.js
