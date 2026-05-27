@@ -4,20 +4,19 @@ require('dotenv').config();
 const pool = new Pool({
   connectionString: process.env.DATABASE_URL,
   ssl: {
-    rejectUnauthorized: false // Obrigatório para o Render
+    rejectUnauthorized: false 
   },
-  max: 20, // Limite de conexões
+  max: 20, 
   idleTimeoutMillis: 30000,
   connectionTimeoutMillis: 2000,
 });
 
-// Teste de conexão explícito no inicio
 pool.on('connect', () => {
-  console.log('✅ Conectado ao banco de dados com sucesso');
+  console.log('Connected to the database successfully');
 });
 
 pool.on('error', (err) => {
-  console.error('❌ Erro inesperado no pool de clientes inativos', err);
+  console.error('Unexpected error in the idle client pool', err);
   process.exit(-1);
 });
 

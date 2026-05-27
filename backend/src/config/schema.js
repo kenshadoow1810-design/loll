@@ -85,19 +85,6 @@ const createTables = async () => {
     );
   `;
 
-  const createUserPreferencesTable = `
-    CREATE TABLE IF NOT EXISTS user_preferences (
-      id SERIAL PRIMARY KEY,
-      email VARCHAR(255) UNIQUE,
-      favorite_teams TEXT[], -- Array de IDs ou nomes de times
-      favorite_leagues TEXT[], -- Array de IDs ou nomes de ligas
-      notify_before_match BOOLEAN DEFAULT true,
-      notify_minutes_before INTEGER DEFAULT 15,
-      created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-      updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
-    );
-  `;
-
   try {
     await pool.query(createTeamsTable);
 
@@ -106,8 +93,6 @@ const createTables = async () => {
     await pool.query(createChampionStatsTable);
 
     await pool.query(createMatchesTable);
-
-    await pool.query(createUserPreferencesTable);
 
   } catch (error) {
 

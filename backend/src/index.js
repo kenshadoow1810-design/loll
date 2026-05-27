@@ -17,12 +17,10 @@ app.use(express.json());
 app.use('/api', statsRoutes);
 app.use('/api', scheduleRoutes);
 
-// Servir o frontend buildado em produção
 if (process.env.NODE_ENV === 'production') {
   const frontendPath = path.join(__dirname, '../../frontend/dist');
   app.use(express.static(frontendPath));
-  
-  // Todas as rotas que não são API devem retornar o index.html do React
+
   app.get('/*path', (req, res) => {
 
     if (!req.path.startsWith('/api')) {

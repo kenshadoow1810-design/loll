@@ -33,7 +33,7 @@ const Champions = () => {
       setChampions(data);
       setError(null);
     } catch (err) {
-      setError('Erro ao carregar dados dos campeões. Certifique-se de que a pipeline foi executada.');
+      setError('Error fetching champion data');
 
     } finally {
       setLoading(false);
@@ -110,7 +110,7 @@ const Champions = () => {
       return iconUrl;
     }
 
-    return 'https://ddragon.leagueoflegends.com/cdn/14.1.1/img/champion/Aatrox.png';
+    return 'https://ddragon.leagueoflegends.com/cdn/16.1.1/img/champion/Aatrox.png';
   };
 
   if (loading) return <div className="loading">{t('loadingChampions')}</div>;
@@ -212,7 +212,7 @@ const Champions = () => {
                           className="champion-icon"
                           onError={(e) => {
                             e.target.onerror = null;
-                            e.target.src = 'https://ddragon.leagueoflegends.com/cdn/14.1.1/img/champion/Aatrox.png';
+                            e.target.src = 'https://ddragon.leagueoflegends.com/cdn/16.1.1/img/champion/Aatrox.png';
                           }}
                         />
                         <span>{champ.champion_name}</span>

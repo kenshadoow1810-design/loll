@@ -1,17 +1,13 @@
-// Scheduler removido - agora usando GitHub Actions para agendamento
-// As funções são executadas via endpoints API chamados pelo GitHub Actions
-
 const { runExtraction } = require('../services/dataPipeline');
 const { updateImagesAndRealNames } = require('./updateImages');
 const { fetchAndStoreMatches } = require('../services/matchScheduleService');
 
-// Funções exportadas para uso manual ou via API
 async function runExtractionManual() {
   try {
     await runExtraction();
-    console.log('Extração concluída com sucesso');
+    console.log('Data extraction completed successfully');
   } catch (error) {
-    console.error('Erro na extração:', error);
+    console.error('Error in data extraction:', error);
     throw error;
   }
 }
@@ -19,9 +15,9 @@ async function runExtractionManual() {
 async function updateImagesManual() {
   try {
     await updateImagesAndRealNames();
-    console.log('Atualização de imagens concluída com sucesso');
+    console.log('Successfully updated images and real names');
   } catch (error) {
-    console.error('Erro na atualização de imagens:', error);
+    console.error('Error updating images and real names:', error);
     throw error;
   }
 }
@@ -29,9 +25,9 @@ async function updateImagesManual() {
 async function syncMatchesManual() {
   try {
     await fetchAndStoreMatches();
-    console.log('Sincronização de partidas concluída com sucesso');
+    console.log('Successfully synchronized matches');
   } catch (error) {
-    console.error('Erro na sincronização de partidas:', error);
+    console.error('Error synchronizing matches:', error);
     throw error;
   }
 }

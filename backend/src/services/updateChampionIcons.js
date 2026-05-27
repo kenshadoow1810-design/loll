@@ -2,46 +2,38 @@ const pool = require('../config/database');
 const axios = require('axios');
 
 async function updateChampionIcons() {
-  console.log('🎨 Iniciando atualização de ícones dos campeões...');
+  console.log('Starting champion icon update process...');
 
   try {
-    // 1. Buscar versão mais recente do Data Dragon
     const versionsRes = await axios.get('https://ddragon.leagueoflegends.com/api/versions.json');
     const latestVersion = versionsRes.data[0];
-    console.log(`📦 Versão do Data Dragon: ${latestVersion}`);
+    console.log(`Data Dragon Version: ${latestVersion}`);
 
-    // 2. Buscar dados de todos os campeões (para mapear ID -> Nome -> Imagem)
     const championsRes = await axios.get(`https://ddragon.leagueoflegends.com/cdn/${latestVersion}/data/en_US/champion.json`);
     const championData = championsRes.data.data;
 
-    // Cria um mapa: "Nome Normalizado" -> "URL da Imagem"
-    // Ex: "Aatrox" -> "http://ddragon.../img/champion/Aatrox.png"
     const championMap = {};
     for (const key in championData) {
       const champ = championData[key];
-      // Normaliza o nome para garantir match (remove espaços, lower case)
       const normalizedName = champ.name.toLowerCase().replace(/[^a-z0-9]/g, '');
       const imageUrl = `https://ddragon.leagueoflegends.com/cdn/${latestVersion}/img/champion/${key}.png`;
       
       championMap[normalizedName] = imageUrl;
-      // Adiciona variações comuns se necessário (ex: 'RekSai' vs 'Rek\'Sai')
       championMap[key.toLowerCase().replace(/[^a-z0-9]/g, '')] = imageUrl;
     }
 
-    // 3. Buscar campeões no banco que precisam de imagem
     const query = `SELECT id, champion_name, role, league FROM champion_stats WHERE icon_url IS NULL OR icon_url = ''`;
     const result = await pool.query(query);
     
     if (result.rows.length === 0) {
-      console.log('✅ Todos os campeões já possuem ícones.');
+      console.log(' All champions already have icons.');
       return;
     }
 
-    console.log(`🔍 Encontrados ${result.rows.length} campeões sem ícone.`);
+    console.log(` Found ${result.rows.length} champions without icons.`);
 
     let updatedCount = 0;
 
-    // 4. Atualizar um por um
     for (const row of result.rows) {
       const dbNormalizedName = row.champion_name.toLowerCase().replace(/[^a-z0-9]/g, '');
       const imageUrl = championMap[dbNormalizedName];
@@ -50,21 +42,20 @@ async function updateChampionIcons() {
         const updateQuery = `UPDATE champion_stats SET icon_url = $1 WHERE id = $2`;
         await pool.query(updateQuery, [imageUrl, row.id]);
         updatedCount++;
-        console.log(`   ✅ Atualizado: ${row.champion_name} (${row.role} - ${row.league})`);
+        console.log(`Updated: ${row.champion_name} (${row.role} - ${row.league})`);
       } else {
-        console.log(`   ⚠️ Ícone não encontrado para: ${row.champion_name} (Verifique se o nome no CSV bate com o oficial)`);
+        console.log(`Icon not found for: ${row.champion_name}`);
       }
     }
 
-    console.log(`🎉 Processo finalizado! ${updatedCount} ícones atualizados.`);
+    console.log(`Process finished! ${updatedCount} icons updated.`);
 
   } catch (error) {
-    console.error('❌ Erro ao atualizar ícones:', error.message);
+    console.error('Error updating icons:', error.message);
     throw error;
   }
 }
 
-// Executa se chamado diretamente
 if (require.main === module) {
   updateChampionIcons()
     .then(() => process.exit(0))

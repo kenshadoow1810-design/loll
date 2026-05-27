@@ -36,7 +36,6 @@ body {
   width: 100%;
 }
 
-/* Custom scrollbar */
 ::-webkit-scrollbar {
   width: 8px;
   height: 8px;
@@ -55,7 +54,6 @@ body {
   background: var(--gold-500);
 }
 
-/* Animations */
 @keyframes fadeIn {
   from { opacity: 0; }
   to { opacity: 1; }
@@ -76,14 +74,12 @@ body {
   background-size: 1000px 100%;
 }
 
-/* Text gradient utility */
 .text-gradient {
   background-clip: text;
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;
 }
 
-/* Champions page styles */
 .champions-table-container {
   overflow-x: auto;
   border-radius: 12px;

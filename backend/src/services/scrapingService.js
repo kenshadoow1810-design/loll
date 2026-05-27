@@ -48,15 +48,13 @@ if (!fs.existsSync(DOWNLOAD_DIR)) {
 async function downloadCSV(page, url, filename) {
   await page.goto(url, { waitUntil: 'networkidle2', timeout: 60000 });
 
-  // Configurar comportamento de download
   const client = await page.target().createCDPSession();
   await client.send('Page.setDownloadBehavior', {
     behavior: 'allow',
     downloadPath: DOWNLOAD_DIR,
   });
 
-  // Aguardar e clicar no link "Download This Table" pelo texto exato
-  console.log(`Procurando botão "Download This Table" em ${url}...`);
+  console.log(`Searching "Download This Table" on ${url}...`);
 
   try {
     await page.waitForFunction(() => {
@@ -66,19 +64,16 @@ async function downloadCSV(page, url, filename) {
 
     await new Promise(resolve => setTimeout(resolve, 5000));
 
-    // Clicar no elemento encontrado
     await page.evaluate(() => {
       const links = Array.from(document.querySelectorAll('a'));
       const target = links.find(link => link.textContent.trim() === 'Download This Table');
       if (target) target.click();
     });
 
-    console.log(`✅ Clique acionado em "Download This Table" para ${url}`);
+    console.log(`Clicking "Download This Table" for ${url}`);
 
-    // Aguardar o download ser completado
     await new Promise(resolve => setTimeout(resolve, 3000));
 
-    // Procurar o arquivo baixado mais recente
     const files = fs.readdirSync(DOWNLOAD_DIR)
       .filter(f => f.endsWith('.csv'))
       .map(f => ({ name: f, time: fs.statSync(path.join(DOWNLOAD_DIR, f)).mtime }));
@@ -88,7 +83,6 @@ async function downloadCSV(page, url, filename) {
       const latestFile = files[0].name;
       const newPath = path.join(DOWNLOAD_DIR, filename);
 
-      // Renomear se necessário para manter o padrão
       if (latestFile !== filename) {
         fs.renameSync(path.join(DOWNLOAD_DIR, latestFile), newPath);
       }
@@ -98,11 +92,10 @@ async function downloadCSV(page, url, filename) {
 
     return null;
   } catch (error) {
-    console.error(`❌ Erro ao encontrar/clicar no botão de download em ${url}:`, error.message);
+    console.error(`Error finding/clicking download button in ${url}:`, error.message);
 
-    // Listar todos os links disponíveis para debug
     const allLinks = await page.$$eval('a', links => links.map(l => l.textContent.trim()));
-    console.log('Links encontrados na página:', allLinks.filter(l => l.length > 0));
+    console.log('Links found on the page:', allLinks.filter(l => l.length > 0));
 
     throw error;
   }
@@ -120,7 +113,7 @@ function parseCSV(filePath) {
 }
 
 async function scrapePlayers() {
-  console.log('Iniciando scrape de jogadores...');
+  console.log('Starting player scraping...');
   const browser = await puppeteer.launch({
     headless: 'new',
     args: ['--no-sandbox', '--disable-setuid-sandbox', '--disable-dev-shm-usage']
@@ -134,7 +127,7 @@ async function scrapePlayers() {
     const allPlayers = [];
 
     for (const league of LEAGUES) {
-      console.log(`Processando liga: ${league.name}`);
+      console.log(`Processing league: ${league.name}`);
 
       if (league.urls) {
         let leaguePlayers = [];
@@ -142,14 +135,13 @@ async function scrapePlayers() {
         for (let i = 0; i < league.urls.length; i++) {
           const url = league.urls[i];
           const filename = `players_${league.name.toLowerCase()}_${i}.csv`;
-          console.log(`  Baixando URL ${i + 1}/${league.urls.length}: ${url}`);
+          console.log(`Downloading URL ${i + 1}/${league.urls.length}: ${url}`);
 
           const filePath = await downloadCSV(page, url, filename);
           if (filePath && fs.existsSync(filePath)) {
             const players = await parseCSV(filePath);
             players.forEach(p => p.league = league.name);
-            
-            // Agrupar por jogador e SOMAR estatísticas
+
             for (const player of players) {
               const playerName = player.Player || player.player || 'Unknown';
               if (playerStatsMap.has(playerName)) {
@@ -163,31 +155,31 @@ async function scrapePlayers() {
                 playerStatsMap.set(playerName, { ...player });
               }
             }
-            console.log(`    ${players.length} jogadores extraídos`);
+            console.log(`${players.length} players scraped`);
           }
         }
 
         const uniquePlayers = Array.from(playerStatsMap.values());
-        console.log(`  Total único para ${league.name}: ${uniquePlayers.length} jogadores`);
+        console.log(`Total unique for ${league.name}: ${uniquePlayers.length} players`);
         allPlayers.push(...uniquePlayers);
       } else {
         const filename = `players_${league.name.toLowerCase()}.csv`;
-        console.log(`  Baixando: ${league.url}`);
+        console.log(`Downloading: ${league.url}`);
 
         const filePath = await downloadCSV(page, league.url, filename);
         if (filePath && fs.existsSync(filePath)) {
           const players = await parseCSV(filePath);
           players.forEach(p => p.league = league.name);
           allPlayers.push(...players);
-          console.log(`    ${players.length} jogadores extraídos`);
+          console.log(`${players.length} players scraped`);
         }
       }
     }
 
-    console.log(`Total de jogadores extraídos: ${allPlayers.length}`);
+    console.log(`Total of players scraped: ${allPlayers.length}`);
     return allPlayers;
   } catch (error) {
-    console.error('Erro no scrape de jogadores:', error);
+    console.error('Error scraping players:', error);
     throw error;
   } finally {
     await browser.close();
@@ -195,7 +187,7 @@ async function scrapePlayers() {
 }
 
 async function scrapeTeams() {
-  console.log('Iniciando scrape de times...');
+  console.log('Starting team scraping...');
   const browser = await puppeteer.launch({
     headless: 'new',
     args: ['--no-sandbox', '--disable-setuid-sandbox', '--disable-dev-shm-usage']
@@ -208,25 +200,24 @@ async function scrapeTeams() {
     const allTeams = [];
 
     for (const league of TEAMS_LEAGUES) {
-      console.log(`Processando liga: ${league.name}`);
+      console.log(`Processing league: ${league.name}`);
 
       if (league.urls) {
         let leagueTeams = [];
         for (let i = 0; i < league.urls.length; i++) {
           const url = league.urls[i];
           const filename = `teams_${league.name.toLowerCase()}_${i}.csv`;
-          console.log(`  Baixando URL ${i + 1}/${league.urls.length}: ${url}`);
+          console.log(`Downloading URL ${i + 1}/${league.urls.length}: ${url}`);
 
           const filePath = await downloadCSV(page, url, filename);
           if (filePath && fs.existsSync(filePath)) {
             const teams = await parseCSV(filePath);
             teams.forEach(t => t.league = league.name);
             leagueTeams = leagueTeams.concat(teams);
-            console.log(`    ${teams.length} times extraídos`);
+            console.log(`${teams.length} teams scraped`);
           }
         }
 
-        // Consolidar dados de times com mesmo nome (somar estatísticas)
         const teamMap = new Map();
         for (const team of leagueTeams) {
           const teamName = team.Team || team.team;
@@ -240,26 +231,26 @@ async function scrapeTeams() {
           }
         }
         const consolidatedTeams = Array.from(teamMap.values());
-        console.log(`  Total consolidado para ${league.name}: ${consolidatedTeams.length} times`);
+        console.log(`Total consolidated for ${league.name}: ${consolidatedTeams.length} teams`);
         allTeams.push(...consolidatedTeams);
       } else {
         const filename = `teams_${league.name.toLowerCase()}.csv`;
-        console.log(`  Baixando: ${league.url}`);
+        console.log(`Downloading: ${league.url}`);
 
         const filePath = await downloadCSV(page, league.url, filename);
         if (filePath && fs.existsSync(filePath)) {
           const teams = await parseCSV(filePath);
           teams.forEach(t => t.league = league.name);
           allTeams.push(...teams);
-          console.log(`    ${teams.length} times extraídos`);
+          console.log(`${teams.length} teams scraped`);
         }
       }
     }
 
-    console.log(`Total de times extraídos: ${allTeams.length}`);
+    console.log(`Total teams scraped: ${allTeams.length}`);
     return allTeams;
   } catch (error) {
-    console.error('Erro no scrape de times:', error);
+    console.error('Error scraping teams:', error);
     throw error;
   } finally {
     await browser.close();
@@ -267,7 +258,7 @@ async function scrapeTeams() {
 }
 
 async function scrapeChampions() {
-  console.log('Iniciando scrape de campeões...');
+  console.log('Starting champion scraping...');
   const browser = await puppeteer.launch({
     headless: 'new',
     args: ['--no-sandbox', '--disable-setuid-sandbox', '--disable-dev-shm-usage']
@@ -280,31 +271,30 @@ async function scrapeChampions() {
     const allChampions = [];
 
     for (const league of CHAMPIONS_LEAGUES) {
-      console.log(`Processando liga: ${league.name}`);
+      console.log(`Processing league: ${league.name}`);
 
       if (league.urls) {
         let leagueChampions = [];
         for (let i = 0; i < league.urls.length; i++) {
           const url = league.urls[i];
           const filename = `champions_${league.name.toLowerCase()}_${i}.csv`;
-          console.log(`  Baixando URL ${i + 1}/${league.urls.length}: ${url}`);
+          console.log(`Downloading URL ${i + 1}/${league.urls.length}: ${url}`);
 
           const filePath = await downloadCSV(page, url, filename);
           if (filePath && fs.existsSync(filePath)) {
-            // Verificar se o arquivo CSV tem conteúdo
             const stats = fs.statSync(filePath);
             if (stats.size === 0) {
-              console.warn(`⚠️ Arquivo vazio detectado: ${filePath}, tentando novamente...`);
+              console.warn(`Empty file detected: ${filePath}, trying again...`);
               await new Promise(resolve => setTimeout(resolve, 2000));
               const retryPath = await downloadCSV(page, url, filename);
               if (retryPath && fs.existsSync(retryPath)) {
                 const retryStats = fs.statSync(retryPath);
                 if (retryStats.size === 0) {
-                  console.error(`❌ Arquivo continua vazio após retry: ${retryPath}`);
+                  console.error(`Empty file detected after retry: ${retryPath}`);
                   continue;
                 }
               } else {
-                console.error(`❌ Falha ao baixar arquivo na segunda tentativa: ${url}`);
+                console.error(`Failed to download file on second attempt: ${url}`);
                 continue;
               }
             }
@@ -312,13 +302,12 @@ async function scrapeChampions() {
             const champions = await parseCSV(filePath);
             champions.forEach(c => c.league = league.name);
             leagueChampions = leagueChampions.concat(champions);
-            console.log(`    ${champions.length} campeões extraídos`);
+            console.log(`${champions.length} champions scraped`);
           } else {
-            console.warn(`⚠️ Nenhum arquivo baixado para: ${url}`);
+            console.warn(`No file downloaded for: ${url}`);
           }
         }
 
-        // Consolidar dados de campeões com mesmo nome e role (SOMAR estatísticas)
         const champMap = new Map();
         for (const champ of leagueChampions) {
           const keys = Object.keys(champ);
@@ -337,8 +326,7 @@ async function scrapeChampions() {
             const killsKey = findKey(['kills', 'k']);
             const deathsKey = findKey(['deaths', 'd']);
             const assistsKey = findKey(['assists', 'a']);
-            
-            // SOMAR todas as estatísticas
+
             existingChamp[gamesKey] = String((parseInt(existingChamp[gamesKey]) || 0) + (parseInt(champ[gamesKey]) || 0));
             existingChamp[winsKey] = String((parseInt(existingChamp[winsKey]) || 0) + (parseInt(champ[winsKey]) || 0));
             existingChamp[bansKey] = String((parseInt(existingChamp[bansKey]) || 0) + (parseInt(champ[bansKey]) || 0));
@@ -348,7 +336,6 @@ async function scrapeChampions() {
             
             const existingIcon = existingChamp[iconKey];
             const newIcon = champ[iconKey];
-            // Manter o icon_url se existir
             if (!existingChamp[iconKey] && champ[iconKey]) {
               existingChamp[iconKey] = champ[iconKey];
             }
@@ -357,28 +344,27 @@ async function scrapeChampions() {
           }
         }
         const consolidatedChampions = Array.from(champMap.values());
-        console.log(`  Total consolidado para ${league.name}: ${consolidatedChampions.length} campeões`);
+        console.log(`Total consolidated for ${league.name}: ${consolidatedChampions.length} champions`);
         allChampions.push(...consolidatedChampions);
       } else {
         const filename = `champions_${league.name.toLowerCase()}.csv`;
-        console.log(`  Baixando: ${league.url}`);
+        console.log(`Downloading: ${league.url}`);
 
         const filePath = await downloadCSV(page, league.url, filename);
         if (filePath && fs.existsSync(filePath)) {
-          // Verificar se o arquivo CSV tem conteúdo
           const stats = fs.statSync(filePath);
           if (stats.size === 0) {
-            console.warn(`⚠️ Arquivo vazio detectado: ${filePath}, tentando novamente...`);
+            console.warn(`Empty file detected: ${filePath}, trying again...`);
             await new Promise(resolve => setTimeout(resolve, 2000));
             const retryPath = await downloadCSV(page, league.url, filename);
             if (retryPath && fs.existsSync(retryPath)) {
               const retryStats = fs.statSync(retryPath);
               if (retryStats.size === 0) {
-                console.error(`❌ Arquivo continua vazio após retry: ${retryPath}`);
+                console.error(`❌ Empty file detected after retry: ${retryPath}`);
                 continue;
               }
             } else {
-              console.error(`❌ Falha ao baixar arquivo na segunda tentativa: ${league.url}`);
+              console.error(`❌ Failed to download file on second attempt: ${league.url}`);
               continue;
             }
           }
@@ -386,32 +372,28 @@ async function scrapeChampions() {
           const champions = await parseCSV(filePath);
           champions.forEach(c => c.league = league.name);
           allChampions.push(...champions);
-          console.log(`    ${champions.length} campeões extraídos`);
+          console.log(`${champions.length} champions scraped`);
         } else {
-          console.warn(`⚠️ Nenhum arquivo baixado para: ${league.url}`);
+          console.warn(`⚠️ No file downloaded for: ${league.url}`);
         }
       }
     }
 
-    console.log(`Total de campeões extraídos: ${allChampions.length}`);
-    
-    // Buscar imagens dos campeões da API do League of Legends
-    console.log('Buscando imagens dos campeões...');
+    console.log(`Total champions scraped: ${allChampions.length}`);
+
+    console.log('Fetching champion images...');
     const championImages = await fetchChampionImages();
     
-    // Adicionar URLs das imagens aos campeões
     const championsWithImages = allChampions.map(champ => {
       const keys = Object.keys(champ);
       const findKey = (patterns) => keys.find(k => patterns.some(p => k.toLowerCase() === p.toLowerCase()));
       const iconKey = findKey(['icon', 'image', 'url']);
       const champName = champ[findKey(['champion', 'champ', 'name'])] || '';
       
-      // Se já tem icon_url, manter
       if (champ[iconKey] && champ[iconKey].trim() !== '') {
         return champ;
       }
-      
-      // Tentar encontrar a imagem pelo nome do campeão
+
       const formattedName = formatChampionName(champName);
       const imageUrl = championImages[formattedName] || null;
       
@@ -427,18 +409,17 @@ async function scrapeChampions() {
       const findKey = (patterns) => keys.find(k => patterns.some(p => k.toLowerCase() === p.toLowerCase()));
       const iconKey = findKey(['icon', 'image', 'url']);
       return c[iconKey];
-    }).length} campeões com imagens`);
+    }).length} champions with images`);
     
     return championsWithImages;
   } catch (error) {
-    console.error('Erro no scrape de campeões:', error);
+    console.error('Error scraping champions:', error);
     throw error;
   } finally {
     await browser.close();
   }
 }
 
-// Função para buscar todas as imagens dos campeões da API do League of Legends
 async function fetchChampionImages() {
   try {
     const response = await axios.get('https://ddragon.leagueoflegends.com/cdn/16.1.1/data/en_US/champion.json');
@@ -448,22 +429,20 @@ async function fetchChampionImages() {
     for (const [key, champion] of Object.entries(championData)) {
       imageMap[key.toUpperCase()] = `https://ddragon.leagueoflegends.com/cdn/16.1.1/img/champion/${key}.png`;
       
-      // Adicionar variações de nome
       const formattedName = formatChampionName(champion.name);
       if (formattedName !== key.toUpperCase()) {
         imageMap[formattedName] = `https://ddragon.leagueoflegends.com/cdn/16.1.1/img/champion/${key}.png`;
       }
     }
     
-    console.log(`✅ ${Object.keys(imageMap).length} imagens de campeões carregadas`);
+    console.log(`${Object.keys(imageMap).length} champion images loaded`);
     return imageMap;
   } catch (error) {
-    console.error('❌ Erro ao buscar imagens dos campeões:', error.message);
+    console.error('Error fetching champion images:', error.message);
     return {};
   }
 }
 
-// Formatar nome do campeão para comparação
 function formatChampionName(name) {
   if (!name) return '';
   return name

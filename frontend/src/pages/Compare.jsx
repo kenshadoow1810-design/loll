@@ -31,10 +31,10 @@ export function Compare() {
   const player2 = allPlayers.find(p => p.id === player2Id);
 
   const radarData = {
-    labels: ['KDA', 'CS/min', 'KP%', 'WR%', 'Dano', 'Ouro'],
+    labels: ['KDA', 'CS/min', 'KP%', 'WR%', 'DPM', 'Gold per Min'],
     datasets: [
       {
-        label: player1?.name || 'Jogador 1',
+        label: player1?.name || 'Player 1',
         data: player1 ? [
           player1.kda,
           player1.csPerMin * 10,
@@ -49,7 +49,7 @@ export function Compare() {
         pointBackgroundColor: 'rgba(240, 192, 64, 1)',
       },
       {
-        label: player2?.name || 'Jogador 2',
+        label: player2?.name || 'Player 2',
         data: player2 ? [
           player2.kda,
           player2.csPerMin * 10,

@@ -3,21 +3,17 @@ const fs = require('fs');
 const path = require('path');
 const csv = require('csv-parser');
 
-// Função auxiliar para encontrar a pasta backend/downloads independentemente de onde o script roda
 function getDownloadsDir() {
-  // Tenta caminho relativo direto (se rodar na raiz do backend)
   let directPath = path.join(__dirname, '../../downloads');
   if (fs.existsSync(directPath)) {
     return directPath;
   }
 
-  // Tenta caminho alternativo (se rodar dentro de src/services)
   let srcPath = path.join(__dirname, '../downloads');
   if (fs.existsSync(srcPath)) {
     return srcPath;
   }
 
-  // Fallback absoluto baseado na estrutura esperada
   const rootPath = path.resolve(__dirname, '../../../downloads');
   if (fs.existsSync(rootPath)) {
     return rootPath;
@@ -257,19 +253,13 @@ async function saveTeamsToDB(teams, leagueOverride) {
   }
 }
 
-// Função auxiliar para extrair a liga do nome do arquivo
 function extractLeagueFromFilename(filename) {
-  // Remove a extensão .csv (case insensitive)
   const nameWithoutExt = filename.replace(/\.csv$/i, '');
   
-  // Divide por underscore ou ponto
-  // Ex: "players_lck" -> ["players", "lck"]
   const parts = nameWithoutExt.split(/[_\.]/);
   
-  // Lista de ligas conhecidas para validação
   const knownLeagues = ['lcs', 'lec', 'lck', 'lpl', 'cblol'];
   
-  // Procura nas partes do nome algo que bata com uma liga conhecida
   for (const part of parts) {
     const upperPart = part.toUpperCase();
     if (knownLeagues.includes(part.toLowerCase())) {
@@ -277,7 +267,6 @@ function extractLeagueFromFilename(filename) {
     }
   }
 
-  // Se não achar na lista, assume que a liga é a última parte do nome (padrão tipo_LIGA)
   if (parts.length > 1) {
     return parts[parts.length - 1].toUpperCase();
   }
@@ -295,24 +284,24 @@ async function runExtractionFromCSV() {
   }
   
   if (!fs.existsSync(downloadsDir)) {
-    console.log('Pasta downloads não encontrada.');
+    console.log('Downloads folder not found.');
     return;
   }
 
   const files = fs.readdirSync(downloadsDir).filter(f => f.endsWith('.csv'));
   
   if (files.length === 0) {
-    console.log('Nenhum arquivo CSV encontrado na pasta downloads.');
+    console.log('No CSV files found in the downloads folder.');
     return;
   }
 
-  console.log(`Encontrados ${files.length} arquivos para processar em: ${downloadsDir}`);
+  console.log(`Found ${files.length} files to process in: ${downloadsDir}`);
 
   for (const file of files) {
     const filePath = path.join(downloadsDir, file);
     const league = extractLeagueFromFilename(file);
     
-    console.log(`\nProcessando arquivo: ${file} | Liga detectada: ${league}`);
+    console.log(`\nProcessing file: ${file} | Detected league: ${league}`);
 
     const results = [];
     
@@ -329,24 +318,24 @@ async function runExtractionFromCSV() {
     try {
       if (file.toLowerCase().includes('player')) {
         await savePlayersToDB(results, league);
-        console.log(`✅ ${results.length} jogadores salvos (${league}).`);
+        console.log(`${results.length} players saved (${league}).`);
       } else if (file.toLowerCase().includes('team')) {
         await saveTeamsToDB(results, league);
-        console.log(`✅ ${results.length} times salvos (${league}).`);
+        console.log(`${results.length} teams saved (${league}).`);
       } else if (file.toLowerCase().includes('champ')) {
         await saveChampionStatsToDB(results, league);
-        console.log(`✅ ${results.length} campeões salvos (${league}).`);
+        console.log(`${results.length} champions saved (${league}).`);
       } else {
-        console.log(`⚠️ Arquivo ${file} ignorado (nome não reconhecido).`);
+        console.log(`File ${file} ignored (unrecognized name).`);
       }
     } catch (err) {
-      console.error(`Erro ao processar ${file}:`, err.message);
+      console.error(`Error processing ${file}:`, err.message);
     }
   }
 }
 
 async function runExtraction() {
-  console.log("Executando extração via CSV...");
+  console.log("Starting data extraction from CSV files...");
   return runExtractionFromCSV();
 }
 
