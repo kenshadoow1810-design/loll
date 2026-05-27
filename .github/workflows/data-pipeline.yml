@@ -36,7 +36,7 @@ jobs:
           DATABASE_URL: ${{ secrets.DATABASE_URL }}
         run: |
           cd backend
-          node src/services/dataPipeline.js
+          npm run extract
 
       - name: 2. Atualizar Ícones dos Campeões
         env:
