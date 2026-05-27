@@ -68,7 +68,7 @@ const getSchedule = async (req, res) => {
   }
 };
 
-exports.syncMatches = async (req, res) => {
+const syncMatches = async (req, res) => {
   try {
 
     const result = await fetchAndStoreMatches();
@@ -85,7 +85,7 @@ exports.syncMatches = async (req, res) => {
   }
 };
 
-exports.updateImages = async (req, res) => {
+const updateImages = async (req, res) => {
   try {
     await updateImagesAndRealNames();
     res.json({ 
@@ -95,4 +95,10 @@ exports.updateImages = async (req, res) => {
     console.error('Erro ao atualizar imagens:', error);
     res.status(500).json({ error: 'Erro ao atualizar imagens' });
   }
+};
+
+module.exports = {
+  getSchedule,
+  syncMatches,
+  updateImages
 };
