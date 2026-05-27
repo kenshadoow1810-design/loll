@@ -1,126 +1,47 @@
 const pool = require('../config/database');
 const fs = require('fs');
 const path = require('path');
-const csvParser = require('csv-parser');
-const { scrapePlayers, scrapeTeams, scrapeChampions } = require('./scrapingService');
+const csv = require('csv-parser');
 
-const DOWNLOAD_DIR = path.join(__dirname, '../../downloads');
+// Caminho absoluto e fixo para a pasta downloads dentro de backend
+// Se este arquivo estiver em backend/src/services, sobe dois níveis para chegar em backend/
+const BACKEND_ROOT = path.join(__dirname, '..', '..');
+const DOWNLOADS_DIR = path.join(BACKEND_ROOT, 'downloads');
 
-async function runExtractionFromCSV() {
-  try {
-    console.log('Iniciando extração de dados dos CSVs na pasta downloads...');
-
-    if (!fs.existsSync(DOWNLOAD_DIR)) {
-      throw new Error('Pasta downloads não encontrada. Faça upload dos arquivos CSV manualmente.');
+/**
+ * Extrai a liga do nome do arquivo.
+ * Ex: players_lck.csv -> LCK, teams.cblol.csv -> CBLol
+ */
+function extractLeagueFromFilename(filename) {
+  // Remove extensão .csv
+  const nameWithoutExt = filename.replace(/\.csv$/i, '');
+  
+  // Tenta separar por _ ou .
+  const parts = nameWithoutExt.split(/[_\.]/);
+  
+  const knownLeagues = ['lcs', 'lec', 'lck', 'lpl', 'cblol', 'lco', 'lla', 'vcs', 'pcs', 'ljl', 'lcl', 'tur', 'global'];
+  
+  // Procura uma parte que seja uma liga conhecida
+  for (const part of parts) {
+    const upperPart = part.toUpperCase();
+    if (knownLeagues.includes(part.toLowerCase())) {
+      return upperPart;
     }
-
-    const csvFiles = fs.readdirSync(DOWNLOAD_DIR).filter(f => f.endsWith('.csv'));
-
-    if (csvFiles.length === 0) {
-      throw new Error('Nenhum arquivo CSV encontrado na pasta downloads/');
-    }
-
-    console.log(`📁 Arquivos CSV encontrados: ${csvFiles.length}`);
-    csvFiles.forEach(f => console.log(`  - ${f}`));
-
-    // Processar jogadores
-    const playerFiles = csvFiles.filter(f => f.toLowerCase().includes('player'));
-    if (playerFiles.length > 0) {
-      console.log('\n📊 Processando jogadores...');
-      const allPlayers = [];
-
-      for (const file of playerFiles) {
-        const filePath = path.join(DOWNLOAD_DIR, file);
-        const players = await parseCSV(filePath);
-
-        // Detectar liga pelo nome do arquivo
-        const leagueMatch = file.match(/_(lcs|lck|lec|lpl|cblol)_/i);
-        const league = leagueMatch ? leagueMatch[1].toUpperCase() : 'GLOBAL';
-
-        // Forçar a liga em todos os jogadores, sobrescrevendo qualquer valor do CSV
-        players.forEach(p => {
-          p.league = league;
-        });
-        allPlayers.push(...players);
-        console.log(`  ✅ ${file}: ${players.length} jogadores (Liga: ${league})`);
-      }
-
-      await savePlayersToDB(allPlayers);
-      console.log(`✅ Total de jogadores salvos: ${allPlayers.length}`);
-    }
-
-    // Processar times
-    const teamFiles = csvFiles.filter(f => f.toLowerCase().includes('team'));
-    if (teamFiles.length > 0) {
-      console.log('\n🏆 Processando times...');
-      const allTeams = [];
-
-      for (const file of teamFiles) {
-        const filePath = path.join(DOWNLOAD_DIR, file);
-        const teams = await parseCSV(filePath);
-
-        const leagueMatch = file.match(/_(lcs|lck|lec|lpl|cblol)_/i);
-        const league = leagueMatch ? leagueMatch[1].toUpperCase() : 'GLOBAL';
-
-        // Forçar a liga em todos os times
-        teams.forEach(t => {
-          t.league = league;
-        });
-        allTeams.push(...teams);
-        console.log(`  ✅ ${file}: ${teams.length} times (Liga: ${league})`);
-      }
-
-      await saveTeamsToDB(allTeams);
-      console.log(`✅ Total de times salvos: ${allTeams.length}`);
-    }
-
-    // Processar campeões
-    const champFiles = csvFiles.filter(f => f.toLowerCase().includes('champ'));
-    if (champFiles.length > 0) {
-      console.log('\n⚔️ Processando campeões...');
-      const allChampions = [];
-
-      for (const file of champFiles) {
-        const filePath = path.join(DOWNLOAD_DIR, file);
-        const champions = await parseCSV(filePath);
-
-        const leagueMatch = file.match(/_(lcs|lck|lec|lpl|cblol)_/i);
-        const league = leagueMatch ? leagueMatch[1].toUpperCase() : 'GLOBAL';
-
-        // Forçar a liga em todos os campeões
-        champions.forEach(c => {
-          c.league = league;
-        });
-        allChampions.push(...champions);
-        console.log(`  ✅ ${file}: ${champions.length} campeões (Liga: ${league})`);
-      }
-
-      await saveChampionStatsToDB(allChampions);
-      console.log(`✅ Total de campeões salvos: ${allChampions.length}`);
-    }
-
-    console.log('\n✅ Pipeline de extração concluída com sucesso!');
-  } catch (error) {
-    console.error('❌ Erro na extração:', error);
-    throw error;
   }
+
+  // Se não achar conhecido, assume que a liga é a última parte do nome (ex: players_LIGA)
+  if (parts.length > 1) {
+    return parts[parts.length - 1].toUpperCase();
+  }
+
+  return 'GLOBAL';
 }
 
-function parseCSV(filePath) {
-  return new Promise((resolve, reject) => {
-    const results = [];
-    fs.createReadStream(filePath)
-      .pipe(csvParser())
-      .on('data', (data) => results.push(data))
-      .on('end', () => resolve(results))
-      .on('error', reject);
-  });
-}
-
-async function saveChampionStatsToDB(champions) {
-
+async function saveChampionStatsToDB(champions, leagueOverride) {
+  console.log(`💾 Salvando ${champions.length} campeões para a liga ${leagueOverride}...`);
+  
   for (const rawChamp of champions) {
-    const champ = normalizeChampionData(rawChamp);
+    const champ = normalizeChampionData(rawChamp, leagueOverride);
 
     const query = `
       INSERT INTO champion_stats (champion_name, role, league, games_played, win_percentage, ban_percentage, total_kills, total_deaths, total_assists, icon_url, updated_at)
@@ -136,11 +57,10 @@ async function saveChampionStatsToDB(champions) {
         updated_at = NOW()
     `;
 
-    const gamesPlayed = champ.games_played || 1;
     const values = [
       champ.champion_name,
       champ.role,
-      champ.league || 'GLOBAL',
+      champ.league,
       champ.games_played || 0,
       champ.win_percentage || 0,
       champ.ban_percentage || 0,
@@ -152,10 +72,10 @@ async function saveChampionStatsToDB(champions) {
 
     await pool.query(query, values);
   }
-
+  console.log(`✅ Campeões salvos com sucesso.`);
 }
 
-function normalizePlayerData(rawPlayer) {
+function normalizePlayerData(rawPlayer, leagueOverride) {
   const keys = Object.keys(rawPlayer);
 
   const findKey = (patterns) => {
@@ -175,16 +95,11 @@ function normalizePlayerData(rawPlayer) {
   const cspmKey = findKey(['cspm', 'cs per minute', 'cs/min']);
 
   const gamesPlayed = parseInt(rawPlayer[gamesKey]) || 0;
-  let wins = 0;
   let winPercentage = 0;
 
   if (winPercentageKey && rawPlayer[winPercentageKey]) {
     const rawWinPct = rawPlayer[winPercentageKey];
-    winPercentage = parseFloat(rawWinPct.replace('%', '')) || 0;
-  }
-
-  if (winsKey && rawPlayer[winsKey]) {
-    wins = parseInt(rawPlayer[winsKey]) || 0;
+    winPercentage = parseFloat(String(rawWinPct).replace('%', '')) || 0;
   }
 
   return {
@@ -198,13 +113,13 @@ function normalizePlayerData(rawPlayer) {
     dpm: parseFloat(rawPlayer[dpmKey]) || 0,
     cspm: parseFloat(rawPlayer[cspmKey]) || 0,
     win_percentage: winPercentage,
-    league: rawPlayer.league,
+    league: leagueOverride, // Força a liga do arquivo
     real_name: rawPlayer.real_name || null,
     image_url: rawPlayer.image_url || null
   };
 }
 
-function normalizeTeamData(rawTeam) {
+function normalizeTeamData(rawTeam, leagueOverride) {
   const keys = Object.keys(rawTeam);
 
   const findKey = (patterns) => {
@@ -221,30 +136,28 @@ function normalizeTeamData(rawTeam) {
     games_played: parseInt(rawTeam[gamesKey]) || 0,
     wins: parseInt(rawTeam[winsKey]) || 0,
     losses: parseInt(rawTeam[lossesKey]) || 0,
-    league: rawTeam.league,
+    league: leagueOverride, // Força a liga do arquivo
     logo_url: rawTeam.logo_url || null
   };
 }
 
-function normalizeChampionData(rawChampion) {
+function normalizeChampionData(rawChampion, leagueOverride) {
   const keys = Object.keys(rawChampion);
 
   const findKey = (patterns) => {
     return keys.find(k => {
       const keyLower = k.toLowerCase();
       return patterns.some(p => {
-
         if (p.length === 1) {
           return keyLower === p.toLowerCase();
         }
-
         return keyLower === p.toLowerCase() || keyLower.includes(p.toLowerCase());
       });
     });
   };
 
   const championKey = findKey(['champion', 'champ', 'name']);
-  const roleKey = findKey(['role', 'lane', 'pos']);
+  const roleKey = findKey(['role', 'lane', 'position']);
   const gamesKey = findKey(['games', 'gp', 'matches', 'games played']);
   const winPercentageKey = findKey(['win %', 'win%', 'win percentage', 'w%']);
   const banPercentageKey = findKey(['ban %', 'ban%', 'ban percentage', 'bans %', 'bans%']);
@@ -257,13 +170,13 @@ function normalizeChampionData(rawChampion) {
   let winPercentage = 0;
   if (winPercentageKey && rawChampion[winPercentageKey]) {
     const rawWinPct = rawChampion[winPercentageKey];
-    winPercentage = parseFloat(rawWinPct.replace('%', '')) || 0;
+    winPercentage = parseFloat(String(rawWinPct).replace('%', '')) || 0;
   }
 
   let banPercentage = 0;
   if (banPercentageKey && rawChampion[banPercentageKey]) {
     const rawBanPct = rawChampion[banPercentageKey];
-    banPercentage = parseFloat(rawBanPct.replace('%', '')) || 0;
+    banPercentage = parseFloat(String(rawBanPct).replace('%', '')) || 0;
   }
 
   return {
@@ -277,15 +190,15 @@ function normalizeChampionData(rawChampion) {
     deaths: parseInt(rawChampion[deathsKey]) || 0,
     assists: parseInt(rawChampion[assistsKey]) || 0,
     icon_url: rawChampion[iconKey] ? String(rawChampion[iconKey]).trim() : null,
-    league: rawChampion.league
+    league: leagueOverride // Força a liga do arquivo
   };
 }
 
-async function savePlayersToDB(players) {
+async function savePlayersToDB(players, leagueOverride) {
+  console.log(`💾 Salvando ${players.length} jogadores para a liga ${leagueOverride}...`);
 
   for (const player of players) {
-    const normalized = normalizePlayerData(player);
-
+    const normalized = normalizePlayerData(player, leagueOverride);
     const safeWinPercentage = Math.min(Math.max(normalized.win_percentage || 0, 0), 100);
 
     const query = `
@@ -324,13 +237,14 @@ async function savePlayersToDB(players) {
 
     await pool.query(query, values);
   }
-
+  console.log(`✅ Jogadores salvos com sucesso.`);
 }
 
-async function saveTeamsToDB(teams) {
+async function saveTeamsToDB(teams, leagueOverride) {
+  console.log(`💾 Salvando ${teams.length} times para a liga ${leagueOverride}...`);
 
   for (const team of teams) {
-    const normalized = normalizeTeamData(team);
+    const normalized = normalizeTeamData(team, leagueOverride);
 
     const query = `
       INSERT INTO teams (name, league, games_played, wins, losses, logo_url, updated_at)
@@ -354,32 +268,82 @@ async function saveTeamsToDB(teams) {
 
     await pool.query(query, values);
   }
+  console.log(`✅ Times salvos com sucesso.`);
+}
 
+async function runExtractionFromCSV() {
+  console.log('🚀 INICIANDO EXTRAÇÃO DE CSVs...');
+  console.log(`📂 Diretório alvo: ${DOWNLOADS_DIR}`);
+
+  // Verificação rígida: se não existir, para com erro
+  if (!fs.existsSync(DOWNLOADS_DIR)) {
+    throw new Error(`❌ ERRO CRÍTICO: O diretório ${DOWNLOADS_DIR} não existe no ambiente de execução.`);
+  }
+
+  const files = fs.readdirSync(DOWNLOADS_DIR).filter(f => f.endsWith('.csv'));
+  
+  console.log(`📄 Arquivos CSV encontrados: ${files.length}`);
+  
+  if (files.length === 0) {
+    console.warn('⚠️ Nenhum arquivo CSV encontrado. O processo será encerrado sem ações.');
+    return;
+  }
+
+  for (const file of files) {
+    const filePath = path.join(DOWNLOADS_DIR, file);
+    const league = extractLeagueFromFilename(file);
+    
+    console.log(`\n----------------------------------------`);
+    console.log(`📝 Processando: ${file} | Liga Detectada: ${league}`);
+    console.log(`----------------------------------------`);
+
+    const results = [];
+    
+    try {
+      await new Promise((resolve, reject) => {
+        fs.createReadStream(filePath)
+          .pipe(csv())
+          .on('data', (data) => results.push(data))
+          .on('end', resolve)
+          .on('error', reject);
+      });
+
+      if (results.length === 0) {
+        console.log(`⚠️ Arquivo ${file} está vazio ou inválido.`);
+        continue;
+      }
+
+      const fileNameLower = file.toLowerCase();
+
+      if (fileNameLower.includes('player')) {
+        await savePlayersToDB(results, league);
+      } else if (fileNameLower.includes('team')) {
+        await saveTeamsToDB(results, league);
+      } else if (fileNameLower.includes('champ')) {
+        await saveChampionStatsToDB(results, league);
+      } else {
+        console.log(`⚠️ Arquivo ${file} ignorado: nome não contém 'player', 'team' ou 'champ'.`);
+      }
+
+    } catch (err) {
+      console.error(`❌ Erro ao processar o arquivo ${file}:`, err.message);
+      throw err; // Propaga o erro para falhar o workflow
+    }
+  }
+
+  console.log('\n🎉 EXTRAÇÃO CONCLUÍDA COM SUCESSO!');
 }
 
 async function runExtraction() {
-  try {
-
-    const players = await scrapePlayers();
-    await savePlayersToDB(players);
-
-    const teams = await scrapeTeams();
-    await saveTeamsToDB(teams);
-
-    const champions = await scrapeChampions();
-    await saveChampionStatsToDB(champions);
-
-  } catch (error) {
-
-    throw error;
-  }
+  // Redireciona diretamente para a função de CSV conforme solicitado
+  return runExtractionFromCSV();
 }
 
-module.exports = {
-  runExtraction,
+module.exports = { 
+  runExtraction, 
   runExtractionFromCSV,
-  savePlayersToDB,
-  saveTeamsToDB,
-  saveChampionStatsToDB,
-  normalizeChampionData
+  savePlayersToDB, 
+  saveTeamsToDB, 
+  saveChampionStatsToDB, 
+  normalizeChampionData 
 };
