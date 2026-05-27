@@ -1,8 +1,15 @@
+const { memoryCache } = require('../services/cacheService');
 const { fetchAndStoreMatches, getUpcomingMatches } = require('../services/matchScheduleService');
 const { updateImagesAndRealNames } = require('../scripts/updateImages');
 
-exports.getSchedule = async (req, res) => {
+const getSchedule = async (req, res) => {
   try {
+    const cacheKey = 'matches:upcoming';
+    const cachedMatches = memoryCache.get(cacheKey);
+
+    if (cachedMatches) {
+      return res.json(cachedMatches);
+    }
     const matches = await getUpcomingMatches();
     
     const formattedMatches = matches.map(match => ({
@@ -50,6 +57,8 @@ exports.getSchedule = async (req, res) => {
       slug: match.slug
     }));
 
+    memoryCache.set(cacheKey, formattedMatches, 5 * 60 * 1000);
+
     res.json(formattedMatches);
   } catch (error) {
 
@@ -63,6 +72,9 @@ exports.syncMatches = async (req, res) => {
   try {
 
     const result = await fetchAndStoreMatches();
+
+    memoryCache.invalidatePrefix('matches:');
+
     res.json({ 
       message: 'Sincronização concluída com sucesso',
       ...result

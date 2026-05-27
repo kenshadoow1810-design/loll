@@ -1,8 +1,14 @@
+const { memoryCache } = require('../services/cacheService');
 const pool = require('../config/database');
 
 const getTeams = async (req, res) => {
   try {
     const { league } = req.params;
+    const cacheKey = memoryCache.generateKey('teams', { league });
+    const cachedTeams = memoryCache.get(cacheKey);
+    if (cachedTeams) {
+      return res.json(cachedTeams);
+    }
 
     let query;
     let values;
@@ -16,10 +22,13 @@ const getTeams = async (req, res) => {
     }
 
     const result = await pool.query(query, values);
+
+    memoryCache.set(cacheKey, result.rows, 10 * 60 * 1000);
+
     res.json(result.rows);
   } catch (error) {
 
-    res.status(500).json({ error: 'Erro interno do servidor' });
+    res.status(500).json({ error: 'Internal server error' });
   }
 };
 
@@ -27,12 +36,18 @@ const getTeamById = async (req, res) => {
   try {
     const { id } = req.params;
 
+    const cacheKey = memoryCache.generateKey('team', { id });
+
+    const cachedTeam = memoryCache.get(cacheKey);
+    if (cachedTeam) {
+      return res.json(cachedTeam);
+    }
 
     const teamQuery = 'SELECT * FROM teams WHERE id = $1';
     const teamResult = await pool.query(teamQuery, [id]);
 
     if (teamResult.rows.length === 0) {
-      return res.status(404).json({ error: 'Time não encontrado' });
+      return res.status(404).json({ error: 'Team not found' });
     }
 
     const team = teamResult.rows[0];
@@ -84,17 +99,25 @@ const getTeamById = async (req, res) => {
       players: players,
     };
 
+    memoryCache.set(cacheKey, teamData, 10 * 60 * 1000);
+
     res.json(teamData);
   } catch (error) {
 
-    res.status(500).json({ error: 'Erro interno do servidor' });
+    res.status(500).json({ error: 'Internal server error' });
   }
 };
 
 const getPlayers = async (req, res) => {
   try {
     const { league } = req.params;
-    const { position } = req.query;
+    const { position } = req.query; 
+    const cacheKey = memoryCache.generateKey('players', { league, position });
+
+    const cachedPlayers = memoryCache.get(cacheKey);
+    if (cachedPlayers) {
+      return res.json(cachedPlayers);
+    }
 
     let query = 'SELECT * FROM players WHERE 1=1';
     const values = [];
@@ -135,10 +158,12 @@ const getPlayers = async (req, res) => {
       gold: Math.floor(parseFloat(player.gold_per_min) * 10) || 0,
     }));
 
+    memoryCache.set(cacheKey, players, 10 * 60 * 1000);
+
     res.json(players);
   } catch (error) {
 
-    res.status(500).json({ error: 'Erro interno do servidor' });
+    res.status(500).json({ error: 'Internal server error' });
   }
 };
 
@@ -146,11 +171,18 @@ const getPlayerById = async (req, res) => {
   try {
     const { id } = req.params;
 
+    const cacheKey = memoryCache.generateKey('player', { id });
+
+    const cachedPlayer = memoryCache.get(cacheKey);
+    if (cachedPlayer) {
+      return res.json(cachedPlayer);
+    }
+
     const query = 'SELECT * FROM players WHERE id = $1';
     const result = await pool.query(query, [id]);
 
     if (result.rows.length === 0) {
-      return res.status(404).json({ error: 'Jogador não encontrado' });
+      return res.status(404).json({ error: 'Player not found' });
     }
 
     const player = result.rows[0];
@@ -172,16 +204,24 @@ const getPlayerById = async (req, res) => {
       gold: Math.floor(parseFloat(player.gold_per_min) * 10) || 0,
     };
 
+    memoryCache.set(cacheKey, playerData, 10 * 60 * 1000);
+
     res.json(playerData);
   } catch (error) {
 
-    res.status(500).json({ error: 'Erro interno do servidor' });
+    res.status(500).json({ error: 'Internal server error' });
   }
 };
 
 const getChampionStats = async (req, res) => {
   try {
       const { role, league } = req.query;
+      const cacheKey = memoryCache.generateKey('champions', { role, league });
+
+      const cachedChampions = memoryCache.get(cacheKey);
+      if (cachedChampions) {
+        return res.json(cachedChampions);
+      }
 
       let query = 'SELECT * FROM champion_stats WHERE 1=1';
       const values = [];
@@ -223,27 +263,45 @@ const getChampionStats = async (req, res) => {
       icon_url: champ.icon_url || null,
     }));
 
+    memoryCache.set(cacheKey, champions, 10 * 60 * 1000);
+
     res.json(champions);
   } catch (error) {
 
-    res.status(500).json({ error: 'Erro interno do servidor' });
+    res.status(500).json({ error: 'Internal server error' });
   }
 };
 
 const getTotalPlayersCount = async (req, res) => {
   try {
+    const cacheKey = 'stats:total-players';
+
+    const cachedCount = memoryCache.get(cacheKey);
+    if (cachedCount) {
+      return res.json(cachedCount);
+    }
+
     const query = 'SELECT COUNT(*) as total FROM players';
     const result = await pool.query(query);
     const count = parseInt(result.rows[0].total) || 0;
+
+    memoryCache.set(cacheKey, responseData, 10 * 60 * 1000);
+
     res.json({ total: count });
   } catch (error) {
 
-    res.status(500).json({ error: 'Erro interno do servidor' });
+    res.status(500).json({ error: 'Internal server error' });
   }
 };
 
 const getLastUpdateTime = async (req, res) => {
   try {
+    const cacheKey = 'stats:last-update';
+
+    const cachedUpdate = memoryCache.get(cacheKey);
+    if (cachedUpdate) {
+      return res.json(cachedUpdate);
+    }
 
     const query = `
       SELECT
@@ -257,13 +315,15 @@ const getLastUpdateTime = async (req, res) => {
     const result = await pool.query(query);
     const lastUpdate = result.rows[0]?.last_update;
 
+     memoryCache.set(cacheKey, responseData, 10 * 60 * 1000);
+
     res.json({
       lastUpdate: lastUpdate || new Date().toISOString(),
       formatted: lastUpdate ? formatLastUpdate(lastUpdate) : 'Agora'
     });
   } catch (error) {
 
-    res.status(500).json({ error: 'Erro interno do servidor' });
+    res.status(500).json({ error: 'Internal server error' });
   }
 };
 
