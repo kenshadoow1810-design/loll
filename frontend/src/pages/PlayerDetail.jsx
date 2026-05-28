@@ -1,8 +1,11 @@
 import { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
+import { Radar } from 'react-chartjs-2';
+import { Chart as ChartJS, RadialLinearScale, PointElement, LineElement, ArcElement, Title, Tooltip, Legend, Filler } from 'chart.js';
 import { api } from '../services/api';
-import { Radar, RadarChart, PolarGrid, PolarAngleAxis, ResponsiveContainer } from 'recharts';
 import { useLanguage } from '../context/LanguageContext';
+
+ChartJS.register(RadialLinearScale, PointElement, LineElement, ArcElement, Title, Tooltip, Legend, Filler);
 
 export function PlayerDetail() {
   const { playerId, league } = useParams();
@@ -51,12 +54,50 @@ export function PlayerDetail() {
 
   const wrColor = player.wr >= 60 ? 'text-green-400' : player.wr >= 50 ? 'text-yellow-400' : 'text-red-400';
 
-  const radarData = [
-    { stat: 'KDA', value: Math.min(player.kda, 10), fullMark: 10 },
-    { stat: 'WR', value: player.wr / 10, fullMark: 10 },
-    { stat: 'KP', value: player.kp / 10, fullMark: 10 },
-    { stat: 'CS', value: Math.min((player.csPerMin || 5) / 1, 10), fullMark: 10 },
-  ];
+  const radarData = {
+    labels: ['KDA', 'CS/min', 'KP%', 'WR%', 'DPM', 'Gold per Min'],
+    datasets: [
+      {
+        label: player.name,
+        data: [
+          player.kda,
+          (player.csPerMin || 0) * 10,
+          player.kp,
+          player.wr,
+          (player.damage || 0) / 500,
+          (player.gold || 0) / 200,
+        ],
+        backgroundColor: 'rgba(240, 192, 64, 0.2)',
+        borderColor: 'rgba(240, 192, 64, 1)',
+        borderWidth: 2,
+        pointBackgroundColor: 'rgba(240, 192, 64, 1)',
+      },
+    ],
+  };
+
+  const radarOptions = {
+    responsive: true,
+    maintainAspectRatio: false,
+    plugins: {
+      legend: {
+        labels: { color: '#9CA3AF', font: { size: 12 } },
+      },
+      title: {
+        display: true,
+        text: t('performanceRadar'),
+        color: '#F0C040',
+        font: { size: 16, weight: 'bold' },
+      },
+    },
+    scales: {
+      r: {
+        angleLines: { color: 'rgba(55, 65, 81, 0.5)' },
+        grid: { color: 'rgba(55, 65, 81, 0.5)' },
+        pointLabels: { color: '#9CA3AF', font: { size: 11 } },
+        ticks: { display: false },
+      },
+    },
+  };
 
   return (
     <div className="pt-24 pb-12 min-h-screen animate-fadeIn">
@@ -154,24 +195,8 @@ export function PlayerDetail() {
             </div>
 
             {}
-            <div className="bg-dark-200 rounded-xl p-4">
-              <h3 className="font-display font-bold text-lg text-white mb-4 text-center">{t('performanceRadar')}</h3>
-              <div className="h-64">
-                <ResponsiveContainer width="100%" height="100%">
-                  <RadarChart cx="50%" cy="50%" outerRadius="75%" data={radarData}>
-                    <PolarGrid stroke="#374151" />
-                    <PolarAngleAxis dataKey="stat" tick={{ fill: '#9CA3AF', fontSize: 12 }} />
-                    <Radar
-                      name={player.name}
-                      dataKey="value"
-                      stroke="#D4AF37"
-                      strokeWidth={3}
-                      fill="#D4AF37"
-                      fillOpacity={0.4}
-                    />
-                  </RadarChart>
-                </ResponsiveContainer>
-              </div>
+            <div className="bg-dark-200 rounded-xl p-4 h-96">
+              <Radar data={radarData} options={radarOptions} />
             </div>
           </div>
 
