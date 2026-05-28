@@ -3,24 +3,27 @@ const fs = require('fs');
 const path = require('path');
 const csv = require('csv-parser');
 
-// Caminho absoluto e rígido para a pasta downloads
-// Funciona tanto localmente quanto no GitHub Actions
-const getDownloadsPath = () => {
-  // Se estiver rodando dentro de src/services, sobe 2 níveis para chegar em backend
-  // Se estiver em scripts, sobe 1 nível
+// Caminho absoluto e rigoroso para a pasta downloads dentro de backend
+const getDownloadsDir = () => {
+  // Se estiver em src/services, sobe dois níveis para chegar na raiz do backend
+  // Se estiver na raiz do backend, usa o próprio __dirname
   const baseDir = __dirname.includes('src/services') 
-    ? path.join(__dirname, '..', '..', 'downloads') 
-    : path.join(__dirname, '..', 'downloads');
+    ? path.resolve(__dirname, '../../downloads') 
+    : path.resolve(__dirname, 'downloads');
   
-  return path.resolve(baseDir);
+  return baseDir;
 };
 
-async function saveChampionStatsToDB(champions, league) {
-  console.log(`💾 Salvando ${champions.length} campeões da liga ${league}...`);
-  let count = 0;
+/**
+ * Salva Campeões (Lógica padrão: Upsert por Nome+Role+Liga)
+ */
+async function saveChampionStatsToDB(champions, leagueOverride) {
+  if (!champions || champions.length === 0) return;
+
   for (const rawChamp of champions) {
-    const champ = normalizeChampionData(rawChamp, league);
-    
+    const champ = normalizeChampionData(rawChamp, leagueOverride);
+    const finalLeague = leagueOverride || champ.league || 'GLOBAL';
+
     const query = `
       INSERT INTO champion_stats (champion_name, role, league, games_played, win_percentage, ban_percentage, total_kills, total_deaths, total_assists, icon_url, updated_at)
       VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, NOW())
@@ -38,7 +41,7 @@ async function saveChampionStatsToDB(champions, league) {
     const values = [
       champ.champion_name,
       champ.role,
-      champ.league,
+      finalLeague,
       champ.games_played || 0,
       champ.win_percentage || 0,
       champ.ban_percentage || 0,
@@ -49,80 +52,116 @@ async function saveChampionStatsToDB(champions, league) {
     ];
 
     await pool.query(query, values);
-    count++;
   }
-  console.log(`✅ ${count} campeões salvos com sucesso.`);
 }
 
-function normalizePlayerData(rawPlayer, league) {
-  const keys = Object.keys(rawPlayer);
-  const findKey = (patterns) => keys.find(k => patterns.some(p => k.toLowerCase().includes(p)));
+/**
+ * Salva Times (Lógica padrão: Upsert por Nome+Liga)
+ */
+async function saveTeamsToDB(teams, leagueOverride) {
+  if (!teams || teams.length === 0) return;
 
-  return {
-    name: rawPlayer[findKey(['player', 'name', 'summoner'])] || 'Unknown',
-    team_name: rawPlayer[findKey(['team', 'org'])] || null,
-    position: rawPlayer[findKey(['pos', 'position', 'role'])] || null,
-    games_played: parseInt(rawPlayer[findKey(['games', 'gp'])]) || 0,
-    kda: parseFloat(rawPlayer[findKey(['kda'])]) || 0,
-    kill_participation: parseFloat(rawPlayer[findKey(['kp', 'kill participation'])]) || 0,
-    gold_per_min: parseFloat(rawPlayer[findKey(['gold', 'gpm'])]) || 0,
-    dpm: parseFloat(rawPlayer[findKey(['dpm'])]) || 0,
-    cspm: parseFloat(rawPlayer[findKey(['cs', 'cspm'])]) || 0,
-    win_percentage: parseFloat((rawPlayer[findKey(['win %', 'win%'])] || '0').replace('%', '')) || 0,
-    league: league, // Força a liga vinda do arquivo
-    real_name: rawPlayer.real_name || null,
-    image_url: rawPlayer.image_url || null
-  };
+  for (const team of teams) {
+    const normalized = normalizeTeamData(team, leagueOverride);
+    const finalLeague = leagueOverride || normalized.league || 'GLOBAL';
+
+    const query = `
+      INSERT INTO teams (name, league, games_played, wins, losses, logo_url, updated_at)
+      VALUES ($1, $2, $3, $4, $5, $6, NOW())
+      ON CONFLICT (name, league) DO UPDATE SET
+        games_played = teams.games_played + EXCLUDED.games_played,
+        wins = teams.wins + EXCLUDED.wins,
+        losses = teams.losses + EXCLUDED.losses,
+        logo_url = COALESCE(EXCLUDED.logo_url, teams.logo_url),
+        updated_at = NOW()
+    `;
+
+    const values = [
+      normalized.name,
+      finalLeague,
+      normalized.games_played,
+      normalized.wins,
+      normalized.losses,
+      normalized.logo_url || null
+    ];
+
+    await pool.query(query, values);
+  }
 }
 
-function normalizeTeamData(rawTeam, league) {
-  const keys = Object.keys(rawTeam);
-  const findKey = (patterns) => keys.find(k => patterns.some(p => k.toLowerCase().includes(p)));
+/**
+ * Salva Jogadores com LÓGICA DE SOMA (Acumulativo)
+ * Se o jogador já existe (Nome + Liga), soma as estatísticas e recalcula as médias.
+ */
+async function savePlayersToDB(players, leagueOverride) {
+  if (!players || players.length === 0) return;
 
-  return {
-    name: rawTeam[findKey(['team', 'name', 'org'])] || 'Unknown',
-    games_played: parseInt(rawTeam[findKey(['games', 'gp'])]) || 0,
-    wins: parseInt(rawTeam[findKey(['wins', 'w'])]) || 0,
-    losses: parseInt(rawTeam[findKey(['losses', 'l'])]) || 0,
-    league: league, // Força a liga vinda do arquivo
-    logo_url: rawTeam.logo_url || null
-  };
-}
-
-function normalizeChampionData(rawChampion, league) {
-  const keys = Object.keys(rawChampion);
-  const findKey = (patterns) => keys.find(k => patterns.some(p => k.toLowerCase().includes(p)));
-
-  const winPctRaw = rawChampion[findKey(['win %', 'win%'])] || '0';
-  const banPctRaw = rawChampion[findKey(['ban %', 'ban%', 'bans %'])] || '0';
-
-  return {
-    champion_name: rawChampion[findKey(['champion', 'champ', 'name'])] || 'Unknown',
-    role: (rawChampion[findKey(['role', 'lane'])] || 'UNKNOWN').trim().toUpperCase(),
-    games_played: parseInt(rawChampion[findKey(['games', 'gp'])]) || 0,
-    win_percentage: parseFloat(winPctRaw.replace('%', '')) || 0,
-    ban_percentage: parseFloat(banPctRaw.replace('%', '')) || 0,
-    kills: parseInt(rawChampion[findKey(['kills', 'k'])]) || 0,
-    deaths: parseInt(rawChampion[findKey(['deaths', 'd'])]) || 0,
-    assists: parseInt(rawChampion[findKey(['assists', 'a'])]) || 0,
-    icon_url: rawChampion[findKey(['icon', 'image'])] || null,
-    league: league // Força a liga vinda do arquivo
-  };
-}
-
-async function savePlayersToDB(players, league) {
-  console.log(`💾 Salvando ${players.length} jogadores da liga ${league}...`);
-  let count = 0;
   for (const player of players) {
-    const normalized = normalizePlayerData(player, league);
+    const normalized = normalizePlayerData(player, leagueOverride);
+    const finalLeague = leagueOverride || normalized.league || 'GLOBAL';
     const safeWinPercentage = Math.min(Math.max(normalized.win_percentage || 0, 0), 100);
 
+    // 1. Verifica se o jogador já existe nesta liga
+    const checkQuery = `SELECT * FROM players WHERE name = $1 AND league = $2`;
+    const existing = await pool.query(checkQuery, [normalized.name, finalLeague]);
+
+    let finalGames = normalized.games_played;
+    let finalWins = Math.round((safeWinPercentage / 100) * finalGames); // Estimativa de vitórias do novo batch
+    let finalKDA = normalized.kda;
+    let finalKP = normalized.kill_participation;
+    let finalGold = normalized.gold_per_min;
+    let finalDPM = normalized.dpm;
+    let finalCSPM = normalized.cspm;
+    
+    // Totais absolutos para soma
+    let totalKills = 0;
+    let totalDeaths = 0;
+    let totalAssists = 0;
+
+    // Calcula totais atuais baseados na média * jogos (aproximação)
+    // Nota: O ideal é ter kills/deaths/assists totais no CSV. Se tiver, use-os. 
+    // Aqui estamos assumindo que precisamos reconstruir ou somar as médias ponderadas.
+    
+    if (existing.rows.length > 0) {
+      const old = existing.rows[0];
+      
+      // Soma Jogos
+      finalGames = (old.games_played || 0) + normalized.games_played;
+      
+      // Soma Vitórias (Recalcula % baseada na soma)
+      const oldWins = Math.round((old.win_percentage / 100) * old.games_played);
+      const totalWins = oldWins + finalWins;
+      const newWinPct = finalGames > 0 ? (totalWins / finalGames) * 100 : 0;
+
+      // Soma Kills/Deaths/Assists (Se o CSV tiver esses campos totais, priorize-os. 
+      // Se o CSV só tiver KDA, precisamos estimar. Assumindo que o CSV tem K, D, A ou que vamos somar as médias ponderadas)
+      // MELHOR ABORDAGEM: Somar as métricas ponderadas diretamente.
+      
+      // Fórmula Média Ponderada: ((Val1 * Qtd1) + (Val2 * Qtd2)) / (Qtd1 + Qtd2)
+      
+      finalKDA = ((old.kda * old.games_played) + (normalized.kda * normalized.games_played)) / finalGames;
+      finalKP = ((old.kill_participation * old.games_played) + (normalized.kill_participation * normalized.games_played)) / finalGames;
+      finalGold = ((old.gold_per_min * old.games_played) + (normalized.gold_per_min * normalized.games_played)) / finalGames;
+      finalDPM = ((old.dpm * old.games_played) + (normalized.dpm * normalized.games_played)) / finalGames;
+      finalCSPM = ((old.cspm * old.games_played) + (normalized.cspm * normalized.games_played)) / finalGames;
+
+      // Atualiza o objeto normalizado com os valores acumulados
+      normalized.games_played = finalGames;
+      normalized.win_percentage = newWinPct;
+      normalized.kda = parseFloat(finalKDA.toFixed(2));
+      normalized.kill_participation = parseFloat(finalKP.toFixed(2));
+      normalized.gold_per_min = parseFloat(finalGold.toFixed(2));
+      normalized.dpm = parseFloat(finalDPM.toFixed(2));
+      normalized.cspm = parseFloat(finalCSPM.toFixed(2));
+    }
+
+    // Query de Insert/Update (O Update agora recebe os valores já somados/calculados acima)
     const query = `
       INSERT INTO players (name, team_name, position, league, games_played, kda, kill_participation, gold_per_min, dpm, cspm, win_percentage, real_name, image_url, updated_at)
       VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, NOW())
       ON CONFLICT (name, league) DO UPDATE SET
-        team_name = EXCLUDED.team_name,
-        position = EXCLUDED.position,
+        team_name = EXCLUDED.team_name, -- Mantém o time mais recente
+        position = EXCLUDED.position,   -- Mantém a posição mais recente
         games_played = EXCLUDED.games_played,
         kda = EXCLUDED.kda,
         kill_participation = EXCLUDED.kill_participation,
@@ -139,62 +178,127 @@ async function savePlayersToDB(players, league) {
       normalized.name,
       normalized.team_name,
       normalized.position,
-      normalized.league,
+      finalLeague,
       normalized.games_played,
       normalized.kda,
       normalized.kill_participation,
       normalized.gold_per_min,
       normalized.dpm,
       normalized.cspm,
-      safeWinPercentage,
+      normalized.win_percentage,
       normalized.real_name || null,
       normalized.image_url || null
     ];
 
     await pool.query(query, values);
-    count++;
   }
-  console.log(`✅ ${count} jogadores salvos com sucesso.`);
 }
 
-async function saveTeamsToDB(teams, league) {
-  console.log(`💾 Salvando ${teams.length} times da liga ${league}...`);
-  let count = 0;
-  for (const team of teams) {
-    const normalized = normalizeTeamData(team, league);
+function normalizePlayerData(rawPlayer, leagueOverride) {
+  const keys = Object.keys(rawPlayer);
+  const findKey = (patterns) => keys.find(k => patterns.some(p => k.toLowerCase().includes(p.toLowerCase())));
 
-    const query = `
-      INSERT INTO teams (name, league, games_played, wins, losses, logo_url, updated_at)
-      VALUES ($1, $2, $3, $4, $5, $6, NOW())
-      ON CONFLICT (name, league) DO UPDATE SET
-        games_played = EXCLUDED.games_played,
-        wins = EXCLUDED.wins,
-        losses = EXCLUDED.losses,
-        logo_url = COALESCE(EXCLUDED.logo_url, teams.logo_url),
-        updated_at = NOW()
-    `;
+  const nameKey = findKey(['player', 'name', 'summoner']);
+  const teamKey = findKey(['team', 'org']);
+  const positionKey = findKey(['pos', 'position', 'role', 'lane']);
+  const gamesKey = findKey(['games', 'gp', 'matches']);
+  const winPercentageKey = findKey(['win %', 'win%', 'win percentage', 'w%']);
+  const kdaKey = findKey(['kda']);
+  const kpKey = findKey(['kp', 'kill participation']);
+  const goldKey = findKey(['gold per 10', 'gold@10', 'gpm', 'gold/min']);
+  const dpmKey = findKey(['dpm', 'damage per minute']);
+  const cspmKey = findKey(['cspm', 'cs per minute', 'cs/min']);
 
-    const values = [
-      normalized.name,
-      normalized.league,
-      normalized.games_played,
-      normalized.wins,
-      normalized.losses,
-      normalized.logo_url || null
-    ];
+  const gamesPlayed = parseInt(rawPlayer[gamesKey]) || 0;
+  let winPercentage = 0;
 
-    await pool.query(query, values);
-    count++;
+  if (winPercentageKey && rawPlayer[winPercentageKey]) {
+    winPercentage = parseFloat(String(rawPlayer[winPercentageKey]).replace('%', '')) || 0;
   }
-  console.log(`✅ ${count} times salvos com sucesso.`);
+
+  return {
+    name: rawPlayer[nameKey] || 'Unknown',
+    team_name: rawPlayer[teamKey] || null,
+    position: rawPlayer[positionKey] || null,
+    games_played: gamesPlayed,
+    kda: parseFloat(rawPlayer[kdaKey]) || 0,
+    kill_participation: parseFloat(rawPlayer[kpKey]) || 0,
+    gold_per_min: parseFloat(rawPlayer[goldKey]) || 0,
+    dpm: parseFloat(rawPlayer[dpmKey]) || 0,
+    cspm: parseFloat(rawPlayer[cspmKey]) || 0,
+    win_percentage: winPercentage,
+    league: leagueOverride, // Força a liga vinda do arquivo
+    real_name: rawPlayer.real_name || null,
+    image_url: rawPlayer.image_url || null
+  };
 }
 
+function normalizeTeamData(rawTeam, leagueOverride) {
+  const keys = Object.keys(rawTeam);
+  const findKey = (patterns) => keys.find(k => patterns.some(p => k.toLowerCase().includes(p)));
+
+  const nameKey = findKey(['team', 'name', 'org']);
+  const gamesKey = findKey(['games', 'gp', 'matches']);
+  const winsKey = findKey(['wins', 'w', 'win']);
+  const lossesKey = findKey(['losses', 'l', 'loss']);
+
+  return {
+    name: rawTeam[nameKey] || 'Unknown',
+    games_played: parseInt(rawTeam[gamesKey]) || 0,
+    wins: parseInt(rawTeam[winsKey]) || 0,
+    losses: parseInt(rawTeam[lossesKey]) || 0,
+    league: leagueOverride,
+    logo_url: rawTeam.logo_url || null
+  };
+}
+
+function normalizeChampionData(rawChampion, leagueOverride) {
+  const keys = Object.keys(rawChampion);
+  const findKey = (patterns) => keys.find(k => {
+    const keyLower = k.toLowerCase();
+    return patterns.some(p => keyLower === p.toLowerCase() || keyLower.includes(p.toLowerCase()));
+  });
+
+  const championKey = findKey(['champion', 'champ', 'name']);
+  const roleKey = findKey(['role', 'lane', 'position']);
+  const gamesKey = findKey(['games', 'gp', 'matches']);
+  const winPercentageKey = findKey(['win %', 'win%', 'win percentage', 'w%']);
+  const banPercentageKey = findKey(['ban %', 'ban%', 'ban percentage', 'bans %']);
+  const killsKey = findKey(['kills', 'k']);
+  const deathsKey = findKey(['deaths', 'd']);
+  const assistsKey = findKey(['assists', 'a']);
+  const iconKey = findKey(['icon', 'image', 'url']);
+
+  let winPercentage = 0;
+  if (winPercentageKey && rawChampion[winPercentageKey]) {
+    winPercentage = parseFloat(String(rawChampion[winPercentageKey]).replace('%', '')) || 0;
+  }
+
+  let banPercentage = 0;
+  if (banPercentageKey && rawChampion[banPercentageKey]) {
+    banPercentage = parseFloat(String(rawChampion[banPercentageKey]).replace('%', '')) || 0;
+  }
+
+  return {
+    champion_name: rawChampion[championKey] || 'Unknown',
+    role: (rawChampion[roleKey] || 'UNKNOWN').trim().toUpperCase(),
+    games_played: parseInt(rawChampion[gamesKey]) || 0,
+    win_percentage: winPercentage,
+    ban_percentage: banPercentage,
+    kills: parseInt(rawChampion[killsKey]) || 0,
+    deaths: parseInt(rawChampion[deathsKey]) || 0,
+    assists: parseInt(rawChampion[assistsKey]) || 0,
+    icon_url: rawChampion[iconKey] ? String(rawChampion[iconKey]).trim() : null,
+    league: leagueOverride
+  };
+}
+
+// Extrai a liga do nome do arquivo (ex: players_cblol_0.csv -> CBLOL)
 function extractLeagueFromFilename(filename) {
-  // Remove extensão
-  const nameNoExt = filename.replace(/\.csv$/i, '');
-  // Divide por _ ou .
-  const parts = nameNoExt.split(/[_\.]/);
+  const nameWithoutExt = filename.replace('.csv', '');
+  const parts = nameWithoutExt.split('_');
   
+  // Procura por ligas conhecidas em qualquer parte do nome
   const knownLeagues = ['lcs', 'lec', 'lck', 'lpl', 'cblol', 'lco', 'lla', 'vcs', 'pcs', 'ljl', 'lcl', 'tur'];
   
   for (const part of parts) {
@@ -202,69 +306,87 @@ function extractLeagueFromFilename(filename) {
       return part.toUpperCase();
     }
   }
+
+  // Fallback: Se o formato for tipo_liga_numero, pega a segunda parte
+  if (parts.length >= 2) {
+    return parts[1].toUpperCase();
+  }
+
   return 'GLOBAL';
 }
 
 async function runExtractionFromCSV() {
-  const downloadsDir = getDownloadsPath();
+  const downloadsDir = getDownloadsDir();
   
-  console.log('🔍 Procurando arquivos em:', downloadsDir);
+  console.log(`🔍 Procurando CSVs em: ${downloadsDir}`);
 
   if (!fs.existsSync(downloadsDir)) {
-    console.error('❌ ERRO CRÍTICO: A pasta downloads NÃO existe neste caminho.');
+    console.error(`❌ ERRO CRÍTICO: A pasta ${downloadsDir} NÃO EXISTE.`);
     throw new Error('Pasta downloads não encontrada');
   }
 
   const files = fs.readdirSync(downloadsDir).filter(f => f.endsWith('.csv'));
   
-  console.log(`📂 Arquivos CSV encontrados: ${files.length}`);
-  console.log('📄 Lista de arquivos:', files);
-
   if (files.length === 0) {
-    console.warn('⚠️ Nenhum arquivo CSV encontrado. O processo será encerrado sem erros, mas sem dados.');
+    console.warn('⚠️ Nenhum arquivo .csv encontrado na pasta downloads.');
     return;
   }
+
+  console.log(`✅ Encontrados ${files.length} arquivos CSV: ${files.join(', ')}`);
 
   for (const file of files) {
     const filePath = path.join(downloadsDir, file);
     const league = extractLeagueFromFilename(file);
     
-    console.log(`\n🚀 Processando: ${file} | Liga Detectada: ${league}`);
+    console.log(`\n📂 Processando: ${file} | Liga Detectada: ${league}`);
 
     const results = [];
     
+    await new Promise((resolve, reject) => {
+      fs.createReadStream(filePath)
+        .pipe(csv())
+        .on('data', (data) => results.push(data))
+        .on('end', resolve)
+        .on('error', reject);
+    });
+
+    if (results.length === 0) {
+      console.log(`   ⚠️ Arquivo vazio: ${file}`);
+      continue;
+    }
+
     try {
-      await new Promise((resolve, reject) => {
-        fs.createReadStream(filePath)
-          .pipe(csv())
-          .on('data', (data) => results.push(data))
-          .on('end', resolve)
-          .on('error', reject);
-      });
-
-      if (results.length === 0) {
-        console.log(`⚠️ Arquivo ${file} está vazio ou tem apenas cabeçalho.`);
-        continue;
-      }
-
       const lowerFile = file.toLowerCase();
       if (lowerFile.includes('player')) {
         await savePlayersToDB(results, league);
+        console.log(`   ✅ ${results.length} jogadores processados (Dados somados se existentes).`);
       } else if (lowerFile.includes('team')) {
         await saveTeamsToDB(results, league);
+        console.log(`   ✅ ${results.length} times processados.`);
       } else if (lowerFile.includes('champ')) {
         await saveChampionStatsToDB(results, league);
+        console.log(`   ✅ ${results.length} campeões processados.`);
       } else {
-        console.log(`⚠️ Arquivo ${file} ignorado (nome não contém 'player', 'team' ou 'champ').`);
+        console.log(`   ⚠️ Arquivo ignorado (nome não contém player, team ou champ): ${file}`);
       }
-
     } catch (err) {
-      console.error(`❌ Erro ao ler/processar ${file}:`, err.message);
-      throw err;
+      console.error(`   ❌ Erro ao salvar dados de ${file}:`, err.message);
+      throw err; // Propaga erro para falhar o workflow
     }
   }
   
-  console.log('\n🎉 Pipeline de extração concluído!');
+  console.log('\n🎉 Extração concluída com sucesso!');
 }
 
-module.exports = { runExtractionFromCSV };
+async function runExtraction() {
+  return runExtractionFromCSV();
+}
+
+module.exports = { 
+  runExtraction, 
+  runExtractionFromCSV,
+  savePlayersToDB, 
+  saveTeamsToDB, 
+  saveChampionStatsToDB, 
+  normalizeChampionData 
+};
