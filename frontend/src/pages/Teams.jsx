@@ -48,10 +48,10 @@ export function Teams() {
             <button
               key={league}
               onClick={() => setSelectedLeague(league)}
-              className={`px-4 py-2 rounded-xl text-sm font-medium transition-all ${
+              className={`px-5 py-2.5 rounded-xl text-sm font-medium transition-all border ${
                 selectedLeague === league
-                  ? 'bg-gold-600 text-dark-300'
-                  : 'bg-dark-100 text-gray-300 hover:text-gold-400 hover:bg-gold-600/10 border border-gray-700/30'
+                  ? 'bg-gradient-to-r from-gold-600 to-gold-500 text-dark-300 border-gold-600/50 shadow-lg shadow-gold-600/20'
+                  : 'bg-dark-100 text-gray-300 hover:text-white hover:bg-dark-200 border-gray-700/30'
               }`}
             >
               {league === 'ALL' ? t('allLeagues') : league}
