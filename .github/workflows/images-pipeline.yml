@@ -30,6 +30,7 @@ jobs:
       - name: 3. Atualizar Fotos dos Jogadores
         env:
           DATABASE_URL: ${{ secrets.DATABASE_URL }}
+          CITO_API_TOKEN: ${{ secrets.CITO_API_TOKEN }}
         run: |
           cd backend
           node src/scripts/updateImages.js
